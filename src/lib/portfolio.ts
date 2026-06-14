@@ -68,16 +68,21 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
 const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, n));
 
 /** Calcule les métriques d'un bien à une date d'observation. */
-export function propertyMetrics(p: PortfolioProperty, asOf: string | Date = new Date()): PropertyMetrics {
+export function propertyMetrics(
+  p: PortfolioProperty,
+  asOf: string | Date = new Date(),
+): PropertyMetrics {
   const remainingDebt = p.loan ? amortizationStateAt(p.loan, asOf).remainingBalance : 0;
   const equity = Math.round(p.currentValue - remainingDebt);
   const annualCashflow = Math.round(p.monthlyCashflowNet * 12);
   const annualRentGross = p.monthlyRentGross * 12;
-  const capital = p.capitalInvested && p.capitalInvested > 0 ? p.capitalInvested : Math.max(1, equity);
+  const capital =
+    p.capitalInvested && p.capitalInvested > 0 ? p.capitalInvested : Math.max(1, equity);
 
   const grossYieldPct = p.purchasePrice > 0 ? round2((annualRentGross / p.purchasePrice) * 100) : 0;
   const cashOnCashPct = round2((annualCashflow / capital) * 100);
-  const appreciationPct = p.purchasePrice > 0 ? round2(((p.currentValue - p.purchasePrice) / p.purchasePrice) * 100) : 0;
+  const appreciationPct =
+    p.purchasePrice > 0 ? round2(((p.currentValue - p.purchasePrice) / p.purchasePrice) * 100) : 0;
   const ltvPct = p.currentValue > 0 ? round2((remainingDebt / p.currentValue) * 100) : 0;
 
   // Score composite : rendement brut (40), cashflow (35), plus-value (25).
@@ -127,7 +132,10 @@ export interface PortfolioSummary {
 }
 
 /** Agrège un portefeuille de biens « owned » (les prospects/vendus sont ignorés). */
-export function portfolioSummary(properties: PortfolioProperty[], asOf: string | Date = new Date()): PortfolioSummary {
+export function portfolioSummary(
+  properties: PortfolioProperty[],
+  asOf: string | Date = new Date(),
+): PortfolioSummary {
   const owned = properties.filter((p) => (p.status ?? "owned") === "owned");
   const metrics = owned.map((p) => propertyMetrics(p, asOf));
 
@@ -137,9 +145,10 @@ export function portfolioSummary(properties: PortfolioProperty[], asOf: string |
   const totalRent = owned.reduce((s, p) => s + p.monthlyRentGross, 0);
 
   // Rendement brut pondéré par valeur.
-  const weightedYield = totalValue > 0
-    ? metrics.reduce((s, m, i) => s + m.grossYieldPct * (owned[i].currentValue / totalValue), 0)
-    : 0;
+  const weightedYield =
+    totalValue > 0
+      ? metrics.reduce((s, m, i) => s + m.grossYieldPct * (owned[i].currentValue / totalValue), 0)
+      : 0;
 
   return {
     propertyCount: owned.length,
@@ -168,7 +177,10 @@ export interface PortfolioRanking {
  * Classe les biens : meilleur / pire par score composite, et détecte
  * sous-performants (rendement < moyenne − 1,5 pt) et candidats à optimiser.
  */
-export function rankProperties(properties: PortfolioProperty[], asOf: string | Date = new Date()): PortfolioRanking {
+export function rankProperties(
+  properties: PortfolioProperty[],
+  asOf: string | Date = new Date(),
+): PortfolioRanking {
   const owned = properties.filter((p) => (p.status ?? "owned") === "owned");
   if (owned.length === 0) {
     return { best: null, worst: null, underperforming: [], toOptimize: [] };
@@ -177,7 +189,9 @@ export function rankProperties(properties: PortfolioProperty[], asOf: string | D
   const sorted = [...metrics].sort((a, b) => b.performanceScore - a.performanceScore);
   const avgYield = metrics.reduce((s, m) => s + m.grossYieldPct, 0) / metrics.length;
 
-  const underperforming = metrics.filter((m) => m.grossYieldPct < avgYield - 1.5 || m.monthlyCashflow < 0);
+  const underperforming = metrics.filter(
+    (m) => m.grossYieldPct < avgYield - 1.5 || m.monthlyCashflow < 0,
+  );
   const toOptimize = metrics.filter(
     (m) => m.flags.includes("cashflow_negatif") || m.flags.includes("candidat_arbitrage"),
   );
@@ -234,7 +248,12 @@ export function netWorthTimeline(
       value += vals[0]?.value ?? p.purchasePrice;
       if (p.loan) debt += amortizationStateAt(p.loan, d).remainingBalance;
     }
-    points.push({ month: monthKey, value: Math.round(value), debt: Math.round(debt), netWorth: Math.round(value - debt) });
+    points.push({
+      month: monthKey,
+      value: Math.round(value),
+      debt: Math.round(debt),
+      netWorth: Math.round(value - debt),
+    });
   }
   return points;
 }
@@ -244,7 +263,11 @@ export function netWorthTimeline(
  * progressive de la dette (la mensualité disparaît une fois le prêt soldé).
  * Hypothèse prudente : loyers et charges constants en euros courants.
  */
-export function projectCashflow(properties: PortfolioProperty[], years: number, from: string | Date = new Date()): number {
+export function projectCashflow(
+  properties: PortfolioProperty[],
+  years: number,
+  from: string | Date = new Date(),
+): number {
   const target = new Date(from);
   target.setFullYear(target.getFullYear() + years);
   const owned = properties.filter((p) => (p.status ?? "owned") === "owned");
@@ -255,7 +278,8 @@ export function projectCashflow(properties: PortfolioProperty[], years: number, 
       const now = amortizationStateAt(p.loan, from);
       const future = amortizationStateAt(p.loan, target);
       // Si le prêt est soldé d'ici la cible, la mensualité revient au cashflow.
-      const paymentFreed = future.monthsRemaining === 0 && now.monthsRemaining > 0 ? now.monthlyPayment : 0;
+      const paymentFreed =
+        future.monthsRemaining === 0 && now.monthsRemaining > 0 ? now.monthlyPayment : 0;
       return sum + (p.monthlyCashflowNet + paymentFreed) * 12;
     }, 0),
   );

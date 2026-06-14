@@ -12,9 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedVeilleRouteImport } from './routes/_authenticated/veille'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
+import { Route as AuthenticatedRecommandationsRouteImport } from './routes/_authenticated/recommandations'
+import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedHistoriqueRouteImport } from './routes/_authenticated/historique'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedAnalyserRouteImport } from './routes/_authenticated/analyser'
+import { Route as AuthenticatedPatrimoineIndexRouteImport } from './routes/_authenticated/patrimoine.index'
+import { Route as AuthenticatedPatrimoineNouveauRouteImport } from './routes/_authenticated/patrimoine.nouveau'
+import { Route as AuthenticatedPatrimoineIdRouteImport } from './routes/_authenticated/patrimoine.$id'
 import { Route as AuthenticatedAnalyseIdRouteImport } from './routes/_authenticated/analyse.$id'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksRefreshMarketDataRouteImport } from './routes/api/public/hooks/refresh-market-data'
@@ -33,9 +41,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedVeilleRoute = AuthenticatedVeilleRouteImport.update({
+  id: '/veille',
+  path: '/veille',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
   id: '/upgrade',
   path: '/upgrade',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRecommandationsRoute =
+  AuthenticatedRecommandationsRouteImport.update({
+    id: '/recommandations',
+    path: '/recommandations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRadarRoute = AuthenticatedRadarRouteImport.update({
+  id: '/radar',
+  path: '/radar',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHistoriqueRoute = AuthenticatedHistoriqueRouteImport.update({
@@ -43,11 +67,39 @@ const AuthenticatedHistoriqueRoute = AuthenticatedHistoriqueRouteImport.update({
   path: '/historique',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
+  id: '/assistant',
+  path: '/assistant',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAnalyserRoute = AuthenticatedAnalyserRouteImport.update({
   id: '/analyser',
   path: '/analyser',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPatrimoineIndexRoute =
+  AuthenticatedPatrimoineIndexRouteImport.update({
+    id: '/patrimoine/',
+    path: '/patrimoine/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPatrimoineNouveauRoute =
+  AuthenticatedPatrimoineNouveauRouteImport.update({
+    id: '/patrimoine/nouveau',
+    path: '/patrimoine/nouveau',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPatrimoineIdRoute =
+  AuthenticatedPatrimoineIdRouteImport.update({
+    id: '/patrimoine/$id',
+    path: '/patrimoine/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAnalyseIdRoute = AuthenticatedAnalyseIdRouteImport.update({
   id: '/analyse/$id',
   path: '/analyse/$id',
@@ -70,9 +122,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/analyser': typeof AuthenticatedAnalyserRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
+  '/radar': typeof AuthenticatedRadarRoute
+  '/recommandations': typeof AuthenticatedRecommandationsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
+  '/veille': typeof AuthenticatedVeilleRoute
   '/analyse/$id': typeof AuthenticatedAnalyseIdRoute
+  '/patrimoine/$id': typeof AuthenticatedPatrimoineIdRoute
+  '/patrimoine/nouveau': typeof AuthenticatedPatrimoineNouveauRoute
+  '/patrimoine/': typeof AuthenticatedPatrimoineIndexRoute
   '/api/public/hooks/refresh-market-data': typeof ApiPublicHooksRefreshMarketDataRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -80,9 +140,17 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/analyser': typeof AuthenticatedAnalyserRoute
+  '/assistant': typeof AuthenticatedAssistantRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
+  '/radar': typeof AuthenticatedRadarRoute
+  '/recommandations': typeof AuthenticatedRecommandationsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
+  '/veille': typeof AuthenticatedVeilleRoute
   '/analyse/$id': typeof AuthenticatedAnalyseIdRoute
+  '/patrimoine/$id': typeof AuthenticatedPatrimoineIdRoute
+  '/patrimoine/nouveau': typeof AuthenticatedPatrimoineNouveauRoute
+  '/patrimoine': typeof AuthenticatedPatrimoineIndexRoute
   '/api/public/hooks/refresh-market-data': typeof ApiPublicHooksRefreshMarketDataRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -92,9 +160,17 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/analyser': typeof AuthenticatedAnalyserRoute
+  '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/historique': typeof AuthenticatedHistoriqueRoute
+  '/_authenticated/radar': typeof AuthenticatedRadarRoute
+  '/_authenticated/recommandations': typeof AuthenticatedRecommandationsRoute
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
+  '/_authenticated/veille': typeof AuthenticatedVeilleRoute
   '/_authenticated/analyse/$id': typeof AuthenticatedAnalyseIdRoute
+  '/_authenticated/patrimoine/$id': typeof AuthenticatedPatrimoineIdRoute
+  '/_authenticated/patrimoine/nouveau': typeof AuthenticatedPatrimoineNouveauRoute
+  '/_authenticated/patrimoine/': typeof AuthenticatedPatrimoineIndexRoute
   '/api/public/hooks/refresh-market-data': typeof ApiPublicHooksRefreshMarketDataRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -104,9 +180,17 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/analyser'
+    | '/assistant'
+    | '/dashboard'
     | '/historique'
+    | '/radar'
+    | '/recommandations'
     | '/upgrade'
+    | '/veille'
     | '/analyse/$id'
+    | '/patrimoine/$id'
+    | '/patrimoine/nouveau'
+    | '/patrimoine/'
     | '/api/public/hooks/refresh-market-data'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -114,9 +198,17 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/analyser'
+    | '/assistant'
+    | '/dashboard'
     | '/historique'
+    | '/radar'
+    | '/recommandations'
     | '/upgrade'
+    | '/veille'
     | '/analyse/$id'
+    | '/patrimoine/$id'
+    | '/patrimoine/nouveau'
+    | '/patrimoine'
     | '/api/public/hooks/refresh-market-data'
     | '/api/public/payments/webhook'
   id:
@@ -125,9 +217,17 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/analyser'
+    | '/_authenticated/assistant'
+    | '/_authenticated/dashboard'
     | '/_authenticated/historique'
+    | '/_authenticated/radar'
+    | '/_authenticated/recommandations'
     | '/_authenticated/upgrade'
+    | '/_authenticated/veille'
     | '/_authenticated/analyse/$id'
+    | '/_authenticated/patrimoine/$id'
+    | '/_authenticated/patrimoine/nouveau'
+    | '/_authenticated/patrimoine/'
     | '/api/public/hooks/refresh-market-data'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -163,11 +263,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/veille': {
+      id: '/_authenticated/veille'
+      path: '/veille'
+      fullPath: '/veille'
+      preLoaderRoute: typeof AuthenticatedVeilleRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/upgrade': {
       id: '/_authenticated/upgrade'
       path: '/upgrade'
       fullPath: '/upgrade'
       preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/recommandations': {
+      id: '/_authenticated/recommandations'
+      path: '/recommandations'
+      fullPath: '/recommandations'
+      preLoaderRoute: typeof AuthenticatedRecommandationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/radar': {
+      id: '/_authenticated/radar'
+      path: '/radar'
+      fullPath: '/radar'
+      preLoaderRoute: typeof AuthenticatedRadarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/historique': {
@@ -177,11 +298,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHistoriqueRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/assistant': {
+      id: '/_authenticated/assistant'
+      path: '/assistant'
+      fullPath: '/assistant'
+      preLoaderRoute: typeof AuthenticatedAssistantRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/analyser': {
       id: '/_authenticated/analyser'
       path: '/analyser'
       fullPath: '/analyser'
       preLoaderRoute: typeof AuthenticatedAnalyserRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/patrimoine/': {
+      id: '/_authenticated/patrimoine/'
+      path: '/patrimoine'
+      fullPath: '/patrimoine/'
+      preLoaderRoute: typeof AuthenticatedPatrimoineIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/patrimoine/nouveau': {
+      id: '/_authenticated/patrimoine/nouveau'
+      path: '/patrimoine/nouveau'
+      fullPath: '/patrimoine/nouveau'
+      preLoaderRoute: typeof AuthenticatedPatrimoineNouveauRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/patrimoine/$id': {
+      id: '/_authenticated/patrimoine/$id'
+      path: '/patrimoine/$id'
+      fullPath: '/patrimoine/$id'
+      preLoaderRoute: typeof AuthenticatedPatrimoineIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/analyse/$id': {
@@ -210,16 +366,32 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyserRoute: typeof AuthenticatedAnalyserRoute
+  AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoriqueRoute: typeof AuthenticatedHistoriqueRoute
+  AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
+  AuthenticatedRecommandationsRoute: typeof AuthenticatedRecommandationsRoute
   AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
+  AuthenticatedVeilleRoute: typeof AuthenticatedVeilleRoute
   AuthenticatedAnalyseIdRoute: typeof AuthenticatedAnalyseIdRoute
+  AuthenticatedPatrimoineIdRoute: typeof AuthenticatedPatrimoineIdRoute
+  AuthenticatedPatrimoineNouveauRoute: typeof AuthenticatedPatrimoineNouveauRoute
+  AuthenticatedPatrimoineIndexRoute: typeof AuthenticatedPatrimoineIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyserRoute: AuthenticatedAnalyserRoute,
+  AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoriqueRoute: AuthenticatedHistoriqueRoute,
+  AuthenticatedRadarRoute: AuthenticatedRadarRoute,
+  AuthenticatedRecommandationsRoute: AuthenticatedRecommandationsRoute,
   AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
+  AuthenticatedVeilleRoute: AuthenticatedVeilleRoute,
   AuthenticatedAnalyseIdRoute: AuthenticatedAnalyseIdRoute,
+  AuthenticatedPatrimoineIdRoute: AuthenticatedPatrimoineIdRoute,
+  AuthenticatedPatrimoineNouveauRoute: AuthenticatedPatrimoineNouveauRoute,
+  AuthenticatedPatrimoineIndexRoute: AuthenticatedPatrimoineIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

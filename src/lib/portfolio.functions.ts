@@ -21,7 +21,14 @@ import {
 /** Hypothèse de taux de crédit de marché 2026 (refi & projections). */
 export const CURRENT_MARKET_RATE = 0.034;
 
-const STRATEGY = z.enum(["location_nue", "lmnp_longue_duree", "bail_mobilite", "colocation", "coliving", "airbnb"]);
+const STRATEGY = z.enum([
+  "location_nue",
+  "lmnp_longue_duree",
+  "bail_mobilite",
+  "colocation",
+  "coliving",
+  "airbnb",
+]);
 const TMI_VALUES = [0, 0.11, 0.3, 0.41, 0.45] as const;
 
 // --------------------------------------------------------------------------
@@ -95,9 +102,10 @@ function computeEconomics(input: {
       airbnbNightly: input.airbnbNightly,
       airbnbOccupancy: input.airbnbOccupancy,
     },
-    financing: input.loanAmount > 0
-      ? { loanAmount: input.loanAmount, rateAPR: input.loanRate, durationYears: input.loanYears }
-      : undefined,
+    financing:
+      input.loanAmount > 0
+        ? { loanAmount: input.loanAmount, rateAPR: input.loanRate, durationYears: input.loanYears }
+        : undefined,
     fiscal: { tmi: input.tmi },
   };
   const res = calcAllStrategies(calcInput).find((s) => s.strategy === input.strategy && s.eligible);
@@ -115,7 +123,10 @@ function computeEconomics(input: {
 const PropertyInput = z.object({
   label: z.string().min(1).max(120),
   cityName: z.string().min(1).max(100),
-  postalCode: z.string().regex(/^\d{5}$/).optional(),
+  postalCode: z
+    .string()
+    .regex(/^\d{5}$/)
+    .optional(),
   propertyType: z.enum(["studio", "t2", "t3", "t4_plus", "maison"]).optional(),
   surfaceM2: z.number().min(8).max(2000),
   rooms: z.number().int().min(1).max(20),
@@ -129,11 +140,17 @@ const PropertyInput = z.object({
   loanAmount: z.number().min(0).max(20_000_000).default(0),
   loanRate: z.number().min(0).max(0.2).default(0.035),
   loanYears: z.number().int().min(1).max(30).default(20),
-  loanStartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  loanStartDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
   currentValue: z.number().min(10_000).max(20_000_000),
   propertyTax: z.number().min(0).max(50_000).default(0),
   copro: z.number().min(0).max(50_000).default(0),
-  tmi: z.number().refine((v) => (TMI_VALUES as readonly number[]).includes(v)).default(0.3),
+  tmi: z
+    .number()
+    .refine((v) => (TMI_VALUES as readonly number[]).includes(v))
+    .default(0.3),
   // Loyers pour le calcul déterministe
   monthlyNu: z.number().min(0).max(50_000).optional(),
   monthlyMeuble: z.number().min(0).max(50_000).optional(),
@@ -215,7 +232,13 @@ export const createProperty = createServerFn({ method: "POST" })
 
     // Valorisations initiales : achat + valeur actuelle.
     await supabase.from("property_valuations").insert([
-      { property_id: inserted.id, user_id: userId, valued_at: data.purchaseDate, value: data.purchasePrice, source: "purchase" },
+      {
+        property_id: inserted.id,
+        user_id: userId,
+        valued_at: data.purchaseDate,
+        value: data.purchasePrice,
+        source: "purchase",
+      },
       { property_id: inserted.id, user_id: userId, value: data.currentValue, source: "manual" },
     ]);
 
@@ -223,7 +246,9 @@ export const createProperty = createServerFn({ method: "POST" })
       user_id: userId,
       kind: "portfolio",
       title: `« ${data.label} » ajouté à votre patrimoine`,
-      body: eco ? `Cashflow estimé ${eco.monthlyCashflowNet >= 0 ? "+" : ""}${eco.monthlyCashflowNet} €/mois · ${eco.netYieldPct}% net` : undefined,
+      body: eco
+        ? `Cashflow estimé ${eco.monthlyCashflowNet >= 0 ? "+" : ""}${eco.monthlyCashflowNet} €/mois · ${eco.netYieldPct}% net`
+        : undefined,
       link: "/patrimoine",
     });
 
@@ -282,7 +307,11 @@ export const deleteProperty = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("properties").delete().eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("properties")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -293,11 +322,16 @@ export const deleteProperty = createServerFn({ method: "POST" })
 export const addValuation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      propertyId: z.string().uuid(),
-      value: z.number().min(1000).max(20_000_000),
-      valuedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-    }).parse(d),
+    z
+      .object({
+        propertyId: z.string().uuid(),
+        value: z.number().min(1000).max(20_000_000),
+        valuedAt: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/)
+          .optional(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -310,7 +344,11 @@ export const addValuation = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     // Met à jour la valeur courante du bien.
-    await supabase.from("properties").update({ current_value: data.value }).eq("id", data.propertyId).eq("user_id", userId);
+    await supabase
+      .from("properties")
+      .update({ current_value: data.value })
+      .eq("id", data.propertyId)
+      .eq("user_id", userId);
     return { ok: true };
   });
 
@@ -403,7 +441,9 @@ export const getPortfolioOverview = createServerFn({ method: "GET" })
       summary,
       timeline,
       best: ranking.best ? { ...ranking.best, label: labelById.get(ranking.best.id) ?? "" } : null,
-      worst: ranking.worst ? { ...ranking.worst, label: labelById.get(ranking.worst.id) ?? "" } : null,
+      worst: ranking.worst
+        ? { ...ranking.worst, label: labelById.get(ranking.worst.id) ?? "" }
+        : null,
       toOptimizeCount: ranking.toOptimize.length,
       projection5y: projectCashflow(properties, 5),
       propertyCount: properties.length,

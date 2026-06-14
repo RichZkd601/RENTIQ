@@ -12,12 +12,7 @@
  * Pur, sans I/O, sans LLM. Couvert par recommendations.test.ts. Les chiffres
  * proviennent du moteur de calcul ; l'IA ne fait que reformuler ces résultats.
  */
-import {
-  calcAllStrategies,
-  type CalcInput,
-  type StrategyKey,
-  type TMI,
-} from "./calculator";
+import { calcAllStrategies, type CalcInput, type StrategyKey, type TMI } from "./calculator";
 import { assessRefinancing, type LoanTerms } from "./loanSchedule";
 
 export type RecommendationType =
@@ -106,7 +101,11 @@ function toCalcInput(p: RecoProperty): CalcInput {
       colocRoomCount: p.market.colocRoomCount ?? undefined,
     },
     financing: p.loan
-      ? { loanAmount: p.loan.principal, rateAPR: p.loan.rateAPR, durationYears: p.loan.durationYears }
+      ? {
+          loanAmount: p.loan.principal,
+          rateAPR: p.loan.rateAPR,
+          durationYears: p.loan.durationYears,
+        }
       : undefined,
     fiscal: { tmi: p.tmi },
   };
@@ -128,7 +127,10 @@ function marketRentForCurrentStrategy(p: RecoProperty): number | null {
 }
 
 /** Génère les recommandations d'un bien, triées par priorité décroissante. */
-export function generateRecommendations(p: RecoProperty, asOf: string | Date = new Date()): Recommendation[] {
+export function generateRecommendations(
+  p: RecoProperty,
+  asOf: string | Date = new Date(),
+): Recommendation[] {
   const out: Recommendation[] = [];
 
   // 1. Hausse de loyer ------------------------------------------------------
@@ -179,9 +181,12 @@ export function generateRecommendations(p: RecoProperty, asOf: string | Date = n
     });
     if (refi.worthwhile) {
       const parts: string[] = [];
-      if (refi.monthlySaving >= 30) parts.push(`renégocier au taux du marché ferait gagner ~${refi.monthlySaving} €/mois`);
+      if (refi.monthlySaving >= 30)
+        parts.push(`renégocier au taux du marché ferait gagner ~${refi.monthlySaving} €/mois`);
       if (refi.unlockedBorrowingCapacity >= 10_000)
-        parts.push(`la plus-value latente débloque ~${refi.unlockedBorrowingCapacity.toLocaleString("fr-FR")} € de capacité d'emprunt pour un nouvel achat`);
+        parts.push(
+          `la plus-value latente débloque ~${refi.unlockedBorrowingCapacity.toLocaleString("fr-FR")} € de capacité d'emprunt pour un nouvel achat`,
+        );
       out.push({
         type: "refinancing",
         propertyId: p.id,
@@ -189,14 +194,18 @@ export function generateRecommendations(p: RecoProperty, asOf: string | Date = n
         description: `Sur ce bien, ${parts.join(" ; ")}.`,
         estimatedMonthlyGain: Math.max(0, refi.monthlySaving),
         estimatedOneOffGain: refi.unlockedBorrowingCapacity,
-        confidence: refi.monthlySaving >= 80 || refi.unlockedBorrowingCapacity >= 30_000 ? "haute" : "moyenne",
+        confidence:
+          refi.monthlySaving >= 80 || refi.unlockedBorrowingCapacity >= 30_000
+            ? "haute"
+            : "moyenne",
         priority: 50 + Math.max(refi.monthlySaving, refi.unlockedBorrowingCapacity / 1000),
       });
     }
   }
 
   // 4. Arbitrage achat/vente -----------------------------------------------
-  const appreciation = p.purchasePrice > 0 ? (p.currentValue - p.purchasePrice) / p.purchasePrice : 0;
+  const appreciation =
+    p.purchasePrice > 0 ? (p.currentValue - p.purchasePrice) / p.purchasePrice : 0;
   const grossYield = p.purchasePrice > 0 ? (p.currentMonthlyRent * 12) / p.purchasePrice : 0;
   if (appreciation >= 0.2 && grossYield < 0.045) {
     const equityGain = Math.round(p.currentValue - p.purchasePrice);
@@ -213,10 +222,15 @@ export function generateRecommendations(p: RecoProperty, asOf: string | Date = n
   }
 
   // 5. Optimisation fiscale (régime de la stratégie actuelle) ---------------
-  if (current && /micro/i.test(current.taxRegime) && (p.market.marketRentMeuble || p.strategy !== "location_nue")) {
+  if (
+    current &&
+    /micro/i.test(current.taxRegime) &&
+    (p.market.marketRentMeuble || p.strategy !== "location_nue")
+  ) {
     // Le moteur a déjà choisi micro ; on signale seulement si le réel pourrait
     // battre le micro de façon non triviale via amortissements (meublé).
-    const reelEligible = p.strategy !== "location_nue" && (p.worksBudget ?? 0) + (p.furnitureBudget ?? 0) > 0;
+    const reelEligible =
+      p.strategy !== "location_nue" && (p.worksBudget ?? 0) + (p.furnitureBudget ?? 0) > 0;
     if (reelEligible) {
       out.push({
         type: "tax_optimization",
@@ -235,7 +249,10 @@ export function generateRecommendations(p: RecoProperty, asOf: string | Date = n
 }
 
 /** Agrège les recommandations de tout le portefeuille, triées par gain. */
-export function generatePortfolioRecommendations(properties: RecoProperty[], asOf: string | Date = new Date()): Recommendation[] {
+export function generatePortfolioRecommendations(
+  properties: RecoProperty[],
+  asOf: string | Date = new Date(),
+): Recommendation[] {
   return properties
     .flatMap((p) => generateRecommendations(p, asOf))
     .sort((a, b) => b.priority - a.priority);

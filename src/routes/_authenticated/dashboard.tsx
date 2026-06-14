@@ -1,0 +1,436 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Building2,
+  TrendingUp,
+  Wallet,
+  Radar,
+  Bell,
+  Lightbulb,
+  ShieldAlert,
+  Sparkles,
+  ArrowRight,
+  Loader2,
+  Plus,
+  ArrowUpRight,
+  ArrowDownRight,
+} from "lucide-react";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { getPortfolioOverview } from "@/lib/portfolio.functions";
+import { listNotifications } from "@/lib/notifications.functions";
+import { listRecommendations } from "@/lib/recommendations.functions";
+import { listRegulatoryAlerts } from "@/lib/watch.functions";
+
+const eur = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} €`;
+
+export const Route = createFileRoute("/_authenticated/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Cockpit patrimonial — RentIQ" },
+      {
+        name: "description",
+        content: "Pilotez votre patrimoine immobilier : valeur, dette, cashflow, recommandations.",
+      },
+    ],
+  }),
+  component: DashboardPage,
+});
+
+function DashboardPage() {
+  const overview = useServerFn(getPortfolioOverview);
+  const notifs = useServerFn(listNotifications);
+  const recos = useServerFn(listRecommendations);
+  const alerts = useServerFn(listRegulatoryAlerts);
+
+  const ov = useQuery({ queryKey: ["portfolio-overview"], queryFn: () => overview({}) });
+  const nq = useQuery({ queryKey: ["notifications"], queryFn: () => notifs({}) });
+  const rq = useQuery({ queryKey: ["recos", "open"], queryFn: () => recos({ data: {} }) });
+  const aq = useQuery({ queryKey: ["alerts"], queryFn: () => alerts({}) });
+
+  if (ov.isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const s = ov.data?.summary;
+  const empty = (ov.data?.propertyCount ?? 0) === 0;
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Cockpit patrimonial</h1>
+          <p className="text-sm text-muted-foreground">
+            Votre copilote immobilier, en un coup d'œil.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/analyser">
+              <Sparkles className="mr-1 h-4 w-4" />
+              Analyser un bien
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to="/patrimoine/nouveau">
+              <Plus className="mr-1 h-4 w-4" />
+              Ajouter un bien
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {empty ? (
+        <Card className="border-dashed">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Construisez votre patrimoine
+            </CardTitle>
+            <CardDescription>
+              Ajoutez vos biens pour activer le cockpit : valeur nette, cashflow, recommandations
+              mensuelles et conseiller IA.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link to="/patrimoine/nouveau">
+                <Plus className="mr-1 h-4 w-4" />
+                Ajouter mon premier bien
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/radar">
+                <Radar className="mr-1 h-4 w-4" />
+                Configurer mon radar
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Kpi
+              icon={<Building2 className="h-4 w-4" />}
+              label="Patrimoine"
+              value={eur(s!.totalValue)}
+              sub={`${ov.data!.propertyCount} bien(s)`}
+            />
+            <Kpi
+              icon={<TrendingUp className="h-4 w-4" />}
+              label="Valeur nette"
+              value={eur(s!.netWorth)}
+              sub={`dette ${eur(s!.totalDebt)}`}
+            />
+            <Kpi
+              icon={<Wallet className="h-4 w-4" />}
+              label="Cashflow / mois"
+              value={`${s!.monthlyCashflow >= 0 ? "+" : ""}${s!.monthlyCashflow} €`}
+              sub={`${eur(s!.annualCashflow)} / an`}
+              tone={s!.monthlyCashflow >= 0 ? "pos" : "neg"}
+            />
+            <Kpi
+              icon={<TrendingUp className="h-4 w-4" />}
+              label="Rendement brut moy."
+              value={`${s!.avgGrossYieldPct}%`}
+              sub={`LTV ${s!.avgLtvPct}%`}
+            />
+          </div>
+
+          {/* Chart + best/worst */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <Card className="lg:col-span-2">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Valeur nette — 12 mois</CardTitle>
+                <CardDescription>Patrimoine net (valeur − dette restante)</CardDescription>
+              </CardHeader>
+              <CardContent className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={ov.data!.timeline}>
+                    <defs>
+                      <linearGradient id="nw" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(160 84% 39%)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(160 84% 39%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(m: string) => m.slice(5)}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 11 }}
+                      tickFormatter={(v: number) => `${Math.round(v / 1000)}k`}
+                      width={38}
+                    />
+                    <Tooltip
+                      formatter={(v: number) => eur(v)}
+                      labelFormatter={(l) => `Mois ${l}`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="netWorth"
+                      stroke="hsl(160 84% 39%)"
+                      fill="url(#nw)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              {ov.data!.best && (
+                <MiniProperty
+                  tone="pos"
+                  title="Meilleur bien"
+                  label={(ov.data!.best as any).label}
+                  yieldPct={ov.data!.best.grossYieldPct}
+                  cashflow={ov.data!.best.monthlyCashflow}
+                />
+              )}
+              {ov.data!.worst && (
+                <MiniProperty
+                  tone="neg"
+                  title="À surveiller"
+                  label={(ov.data!.worst as any).label}
+                  yieldPct={ov.data!.worst.grossYieldPct}
+                  cashflow={ov.data!.worst.monthlyCashflow}
+                />
+              )}
+              <Card>
+                <CardContent className="flex items-center justify-between gap-2 py-4 text-sm">
+                  <span className="text-muted-foreground">Cashflow projeté à 5 ans</span>
+                  <span className="font-mono font-semibold">{eur(ov.data!.projection5y)}/an</span>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Teasers : recos, opportunités, veille, notifs */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <TeaserCard
+          icon={<Lightbulb className="h-4 w-4" />}
+          title="Recommandations"
+          to="/recommandations"
+          count={rq.data?.length ?? 0}
+          loading={rq.isLoading}
+          emptyLabel="Aucune recommandation ouverte"
+          render={(rq.data ?? []).slice(0, 3).map((r: any) => (
+            <li key={r.id} className="flex items-start justify-between gap-2 text-sm">
+              <span className="min-w-0 truncate">{r.title}</span>
+              {Number(r.estimated_monthly_gain) > 0 && (
+                <span className="shrink-0 font-mono text-emerald-600">
+                  +{Math.round(Number(r.estimated_monthly_gain))} €/m
+                </span>
+              )}
+            </li>
+          ))}
+        />
+        <TeaserCard
+          icon={<ShieldAlert className="h-4 w-4" />}
+          title="Veille réglementaire"
+          to="/veille"
+          count={aq.data?.length ?? 0}
+          loading={aq.isLoading}
+          emptyLabel="Rien de nouveau sur vos villes"
+          render={(aq.data ?? []).slice(0, 3).map((a: any) => (
+            <li key={a.id} className="flex items-start gap-2 text-sm">
+              <Badge
+                variant={a.severity === "danger" ? "destructive" : "secondary"}
+                className="mt-0.5 shrink-0 text-[10px]"
+              >
+                {a.cityName ?? "National"}
+              </Badge>
+              <span className="min-w-0 truncate">{a.title}</span>
+            </li>
+          ))}
+        />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </CardTitle>
+            {(nq.data?.unread ?? 0) > 0 && <Badge>{nq.data!.unread} non lues</Badge>}
+          </CardHeader>
+          <CardContent>
+            {nq.isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : (nq.data?.items.length ?? 0) === 0 ? (
+              <p className="text-sm text-muted-foreground">Vos alertes apparaîtront ici.</p>
+            ) : (
+              <ul className="space-y-2">
+                {nq.data!.items.slice(0, 4).map((n: any) => (
+                  <li key={n.id} className="text-sm">
+                    <span className={n.read ? "text-muted-foreground" : "font-medium"}>
+                      {n.title}
+                    </span>
+                    {n.body && (
+                      <span className="block text-xs text-muted-foreground">{n.body}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-primary/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4" />
+              Conseiller patrimonial IA
+            </CardTitle>
+            <CardDescription>Posez une question sur votre patrimoine réel.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex flex-wrap gap-2 text-xs">
+              {[
+                "Puis-je acheter un bien de plus ?",
+                "Mon cashflow dans 5 ans ?",
+                "Quel bien optimiser ?",
+              ].map((q) => (
+                <span
+                  key={q}
+                  className="rounded-full border bg-background px-3 py-1 text-muted-foreground"
+                >
+                  {q}
+                </span>
+              ))}
+            </div>
+            <Button size="sm" asChild className="mt-2">
+              <Link to="/assistant">
+                Ouvrir le conseiller
+                <ArrowRight className="ml-1 h-3 w-3" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+function Kpi({
+  icon,
+  label,
+  value,
+  sub,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+  tone?: "pos" | "neg";
+}) {
+  return (
+    <Card>
+      <CardContent className="space-y-1 py-4">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {icon}
+          {label}
+        </div>
+        <p
+          className={`font-mono text-xl font-semibold ${tone === "pos" ? "text-emerald-600" : tone === "neg" ? "text-rose-600" : ""}`}
+        >
+          {value}
+        </p>
+        {sub && <p className="text-[11px] text-muted-foreground">{sub}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MiniProperty({
+  tone,
+  title,
+  label,
+  yieldPct,
+  cashflow,
+}: {
+  tone: "pos" | "neg";
+  title: string;
+  label: string;
+  yieldPct: number;
+  cashflow: number;
+}) {
+  return (
+    <Card className={tone === "pos" ? "border-emerald-300/50" : "border-amber-300/50"}>
+      <CardContent className="py-4">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {tone === "pos" ? (
+            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+          ) : (
+            <ArrowDownRight className="h-3.5 w-3.5 text-amber-600" />
+          )}
+          {title}
+        </div>
+        <p className="mt-1 truncate font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground">
+          {yieldPct}% brut · {cashflow >= 0 ? "+" : ""}
+          {cashflow} €/mois
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TeaserCard({
+  icon,
+  title,
+  to,
+  count,
+  loading,
+  emptyLabel,
+  render,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  to: string;
+  count: number;
+  loading: boolean;
+  emptyLabel: string;
+  render: React.ReactNode;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="flex items-center gap-2 text-base">
+          {icon}
+          {title}
+          {count > 0 && <Badge variant="secondary">{count}</Badge>}
+        </CardTitle>
+        <Button variant="ghost" size="sm" asChild>
+          <Link to={to as any}>
+            Voir
+            <ArrowRight className="ml-1 h-3 w-3" />
+          </Link>
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : count === 0 ? (
+          <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+        ) : (
+          <ul className="space-y-2">{render}</ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -98,7 +98,11 @@ export const deleteConversation = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("assistant_conversations").delete().eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("assistant_conversations")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -113,7 +117,11 @@ export const sendAssistantMessage = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
 
     // 1. Charger le portefeuille réel.
-    const { data: rows } = await supabase.from("properties").select("*").eq("user_id", userId).eq("status", "owned");
+    const { data: rows } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "owned");
     const properties = (rows ?? []).map(rowToPortfolioProperty);
     const ctx = buildPortfolioContext(properties);
     const intent = detectIntent(data.message);
@@ -145,7 +153,13 @@ export const sendAssistantMessage = createServerFn({ method: "POST" })
     });
 
     // 4. Réponse : LLM (reformule les faits) ou repli déterministe.
-    const answer = await composeAnswer({ ctx, intent, deterministic, history: history ?? [], question: data.message });
+    const answer = await composeAnswer({
+      ctx,
+      intent,
+      deterministic,
+      history: history ?? [],
+      question: data.message,
+    });
 
     await supabase.from("assistant_messages").insert({
       conversation_id: data.conversationId,
@@ -158,9 +172,16 @@ export const sendAssistantMessage = createServerFn({ method: "POST" })
     // 5. Titre auto sur le premier échange.
     if (!history || history.length === 0) {
       const title = data.message.length > 60 ? data.message.slice(0, 57) + "…" : data.message;
-      await supabase.from("assistant_conversations").update({ title }).eq("id", data.conversationId).eq("user_id", userId);
+      await supabase
+        .from("assistant_conversations")
+        .update({ title })
+        .eq("id", data.conversationId)
+        .eq("user_id", userId);
     } else {
-      await supabase.from("assistant_conversations").update({ updated_at: new Date().toISOString() }).eq("id", data.conversationId);
+      await supabase
+        .from("assistant_conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", data.conversationId);
     }
 
     return { answer, intent, grounded: ctx.factSheet };
@@ -191,7 +212,10 @@ ${args.ctx.factSheet}
 ${args.deterministic}`;
 
     const messages = [
-      ...args.history.slice(-8).map((m) => ({ role: m.role === "user" ? ("user" as const) : ("assistant" as const), content: m.content })),
+      ...args.history.slice(-8).map((m) => ({
+        role: m.role === "user" ? ("user" as const) : ("assistant" as const),
+        content: m.content,
+      })),
       { role: "user" as const, content: args.question },
     ];
 

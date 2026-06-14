@@ -46,8 +46,14 @@ const euro = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} €`;
 /** Détecte l'intention d'une question en français (heuristique robuste). */
 export function detectIntent(question: string): AssistantIntent {
   const q = question.toLowerCase();
-  if (/(capacit|emprunt|acheter|prochain achat|troisi|3e|3ème|deuxi|2e|nouveau bien|investir encore)/.test(q)) return "borrowing";
-  if (/(dans \d+\s*an|à \d+\s*an|projection|d'ici|futur|cashflow.*(\d+)\s*an)/.test(q)) return "projection";
+  if (
+    /(capacit|emprunt|acheter|prochain achat|troisi|3e|3ème|deuxi|2e|nouveau bien|investir encore)/.test(
+      q,
+    )
+  )
+    return "borrowing";
+  if (/(dans \d+\s*an|à \d+\s*an|projection|d'ici|futur|cashflow.*(\d+)\s*an)/.test(q))
+    return "projection";
   if (/(moins performant|pire|sous-perform|mauvais bien|faible rendement)/.test(q)) return "worst";
   if (/(vendre|céder|arbitrage|me séparer|revendre)/.test(q)) return "sell";
   if (/(régime|fiscal|impôt|impot|lmnp|réel|reel|micro|défisc|defisc)/.test(q)) return "tax";
@@ -56,7 +62,10 @@ export function detectIntent(question: string): AssistantIntent {
 }
 
 /** Construit le contexte du conseiller à partir des biens détenus. */
-export function buildPortfolioContext(properties: PortfolioProperty[], asOf: string | Date = new Date()): AssistantContext {
+export function buildPortfolioContext(
+  properties: PortfolioProperty[],
+  asOf: string | Date = new Date(),
+): AssistantContext {
   const owned = properties.filter((p) => (p.status ?? "owned") === "owned");
   const summary = portfolioSummary(owned, asOf);
   const ranking = rankProperties(owned, asOf);
@@ -69,7 +78,13 @@ export function buildPortfolioContext(properties: PortfolioProperty[], asOf: str
   const indicativePurchasingPower = Math.round(unlockableEquity / 0.2);
 
   const mkRef = (m: ReturnType<typeof propertyMetrics> | null) =>
-    m ? { label: labelById.get(m.id) ?? "", grossYieldPct: m.grossYieldPct, monthlyCashflow: m.monthlyCashflow } : null;
+    m
+      ? {
+          label: labelById.get(m.id) ?? "",
+          grossYieldPct: m.grossYieldPct,
+          monthlyCashflow: m.monthlyCashflow,
+        }
+      : null;
 
   const arbitrage = ranking.toOptimize
     .filter((m) => m.flags.includes("candidat_arbitrage"))
@@ -80,8 +95,12 @@ export function buildPortfolioContext(properties: PortfolioProperty[], asOf: str
     `Patrimoine : ${summary.propertyCount} bien(s), valeur ${euro(summary.totalValue)}, dette ${euro(summary.totalDebt)}, valeur nette ${euro(summary.netWorth)}.`,
     `Cashflow net : ${summary.monthlyCashflow >= 0 ? "+" : ""}${summary.monthlyCashflow} €/mois (${euro(summary.annualCashflow)}/an). Rendement brut moyen ${summary.avgGrossYieldPct}%. LTV ${summary.avgLtvPct}%.`,
     `Equity mobilisable (refi 80% LTV) ≈ ${euro(unlockableEquity)} ; pouvoir d'achat indicatif ≈ ${euro(indicativePurchasingPower)} (apport 20%).`,
-    ranking.best ? `Meilleur bien : ${labelById.get(ranking.best.id)} (rendement ${ranking.best.grossYieldPct}%, cashflow ${ranking.best.monthlyCashflow} €/mois).` : "",
-    ranking.worst ? `Pire bien : ${labelById.get(ranking.worst.id)} (rendement ${ranking.worst.grossYieldPct}%, cashflow ${ranking.worst.monthlyCashflow} €/mois).` : "",
+    ranking.best
+      ? `Meilleur bien : ${labelById.get(ranking.best.id)} (rendement ${ranking.best.grossYieldPct}%, cashflow ${ranking.best.monthlyCashflow} €/mois).`
+      : "",
+    ranking.worst
+      ? `Pire bien : ${labelById.get(ranking.worst.id)} (rendement ${ranking.worst.grossYieldPct}%, cashflow ${ranking.worst.monthlyCashflow} €/mois).`
+      : "",
     `Cashflow projeté à 5 ans (extinction progressive des prêts) ≈ ${euro(projectCashflow(owned, 5, asOf))}/an.`,
     arbitrage.length ? `Candidats à l'arbitrage : ${arbitrage.join(", ")}.` : "",
   ].filter(Boolean);

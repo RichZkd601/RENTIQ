@@ -26,7 +26,11 @@ export const markNotificationRead = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("notifications").update({ read: true }).eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -35,7 +39,11 @@ export const markAllNotificationsRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", userId).eq("read", false);
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read: true })
+      .eq("user_id", userId)
+      .eq("read", false);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

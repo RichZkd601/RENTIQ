@@ -49,7 +49,10 @@ export const getMarketSnapshot = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z
-      .object({ postalCode: z.string().regex(/^\d{5}$/, "Code postal invalide"), preferredInsee: z.string().optional() })
+      .object({
+        postalCode: z.string().regex(/^\d{5}$/, "Code postal invalide"),
+        preferredInsee: z.string().optional(),
+      })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -58,7 +61,9 @@ export const getMarketSnapshot = createServerFn({ method: "POST" })
 
     // 1. On résout d'abord les communes possibles pour ce CP (gratuit, rapide)
     const communes = await resolveCommunes(data.postalCode);
-    const target = (data.preferredInsee && communes.find((c) => c.inseeCode === data.preferredInsee)) || communes[0];
+    const target =
+      (data.preferredInsee && communes.find((c) => c.inseeCode === data.preferredInsee)) ||
+      communes[0];
 
     // 2. Lookup cache
     const { data: cached } = await supabase
@@ -67,7 +72,8 @@ export const getMarketSnapshot = createServerFn({ method: "POST" })
       .eq("insee_code", target.inseeCode)
       .maybeSingle();
 
-    const fresh = cached && Date.now() - new Date(cached.fetched_at).getTime() < TTL_DAYS * 24 * 60 * 60 * 1000;
+    const fresh =
+      cached && Date.now() - new Date(cached.fetched_at).getTime() < TTL_DAYS * 24 * 60 * 60 * 1000;
     if (fresh) {
       return {
         ...mapRow(cached),

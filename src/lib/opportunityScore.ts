@@ -78,13 +78,18 @@ function toCalcInput(profile: InvestorProfile, c: CandidateListing): CalcInput {
     },
     rent: {
       monthlyNu: c.monthlyRentNu ?? undefined,
-      monthlyMeuble: c.monthlyRentMeuble ?? (c.monthlyRentNu ? Math.round(c.monthlyRentNu * 1.12) : undefined),
+      monthlyMeuble:
+        c.monthlyRentMeuble ?? (c.monthlyRentNu ? Math.round(c.monthlyRentNu * 1.12) : undefined),
       colocRoomRent: c.colocRoomRent ?? undefined,
       colocRoomCount: c.colocRoomCount ?? undefined,
       airbnbNightly: c.airbnbNightly ?? undefined,
       airbnbOccupancy: c.airbnbOccupancy ?? undefined,
     },
-    financing: { loanAmount, rateAPR: profile.assumedRateAPR ?? 0.035, durationYears: profile.assumedYears ?? 20 },
+    financing: {
+      loanAmount,
+      rateAPR: profile.assumedRateAPR ?? 0.035,
+      durationYears: profile.assumedYears ?? 20,
+    },
     fiscal: { tmi: profile.tmi },
   };
 }
@@ -96,7 +101,10 @@ export function scoreOpportunity(profile: InvestorProfile, c: CandidateListing):
   const target = all.find((s) => s.strategy === profile.strategy);
 
   const overBudget = c.price > profile.maxBudget;
-  if (overBudget) reasons.push(`Prix ${c.price.toLocaleString("fr-FR")} € au-dessus du budget (${profile.maxBudget.toLocaleString("fr-FR")} €).`);
+  if (overBudget)
+    reasons.push(
+      `Prix ${c.price.toLocaleString("fr-FR")} € au-dessus du budget (${profile.maxBudget.toLocaleString("fr-FR")} €).`,
+    );
 
   if (!target || !target.eligible) {
     return {
@@ -106,7 +114,10 @@ export function scoreOpportunity(profile: InvestorProfile, c: CandidateListing):
       eligible: false,
       monthlyCashflow: 0,
       netYieldPct: 0,
-      reasons: [target?.blockedReason ?? "Stratégie cible non éligible avec les données fournies.", ...reasons],
+      reasons: [
+        target?.blockedReason ?? "Stratégie cible non éligible avec les données fournies.",
+        ...reasons,
+      ],
     };
   }
 
@@ -119,10 +130,17 @@ export function scoreOpportunity(profile: InvestorProfile, c: CandidateListing):
   // Scoring : cashflow vs seuil (40), rendement (30), marge budget (15), éligibilité (15).
   const cashflowScore = clamp(50 + ((cf - profile.minMonthlyCashflow) / 300) * 50);
   const yieldScore = clamp(((ny - 2) / 6) * 100);
-  const budgetScore = overBudget ? 0 : clamp(((profile.maxBudget - c.price) / profile.maxBudget) * 100 + 40);
-  const matchScore = Math.round(0.4 * cashflowScore + 0.3 * yieldScore + 0.15 * budgetScore + 0.15 * 100);
+  const budgetScore = overBudget
+    ? 0
+    : clamp(((profile.maxBudget - c.price) / profile.maxBudget) * 100 + 40);
+  const matchScore = Math.round(
+    0.4 * cashflowScore + 0.3 * yieldScore + 0.15 * budgetScore + 0.15 * 100,
+  );
 
-  if (cf >= profile.minMonthlyCashflow) reasons.push(`Cashflow ${cf >= 0 ? "+" : ""}${cf} €/mois ≥ objectif (${profile.minMonthlyCashflow} €).`);
+  if (cf >= profile.minMonthlyCashflow)
+    reasons.push(
+      `Cashflow ${cf >= 0 ? "+" : ""}${cf} €/mois ≥ objectif (${profile.minMonthlyCashflow} €).`,
+    );
   else reasons.push(`Cashflow ${cf} €/mois sous l'objectif (${profile.minMonthlyCashflow} €).`);
   reasons.push(`Rendement net ${ny} % (${target.taxRegime}).`);
 
@@ -143,7 +161,10 @@ export function rankOpportunities(
   candidates: CandidateListing[],
   opts: { onlyMatches?: boolean } = {},
 ): Array<{ candidate: CandidateListing; result: OpportunityResult }> {
-  const scored = candidates.map((candidate) => ({ candidate, result: scoreOpportunity(profile, candidate) }));
+  const scored = candidates.map((candidate) => ({
+    candidate,
+    result: scoreOpportunity(profile, candidate),
+  }));
   const filtered = opts.onlyMatches ? scored.filter((s) => s.result.matches) : scored;
   return filtered.sort((a, b) => b.result.matchScore - a.result.matchScore);
 }

@@ -2,12 +2,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { calcAllStrategies, calcFlip, type CalcInput, type TMI } from "./calculator";
-import { matchStrategies, cityRegulationFromRow, type UserObjective, type EffortLevel } from "./strategyMatcher";
+import {
+  matchStrategies,
+  cityRegulationFromRow,
+  type UserObjective,
+  type EffortLevel,
+} from "./strategyMatcher";
 
 // ---------------- Input schema ----------------
 const AnalysisInput = z.object({
   cityName: z.string().min(1).max(100),
-  postalCode: z.string().regex(/^\d{5}$/).optional(),
+  postalCode: z
+    .string()
+    .regex(/^\d{5}$/)
+    .optional(),
   propertyType: z.string().max(20).optional(),
   surfaceM2: z.number().min(8).max(2000),
   rooms: z.number().int().min(1).max(20),
@@ -27,7 +35,10 @@ const AnalysisInput = z.object({
   loanRate: z.number().min(0).max(0.2).default(0.04),
   loanYears: z.number().int().min(1).max(30).default(25),
   downPayment: z.number().min(0).max(20_000_000).optional(),
-  tmi: z.number().refine((v) => [0, 0.11, 0.30, 0.41, 0.45].includes(v)).default(0.30),
+  tmi: z
+    .number()
+    .refine((v) => [0, 0.11, 0.3, 0.41, 0.45].includes(v))
+    .default(0.3),
   objective: z.enum(["cashflow", "patrimoine", "equilibre", "defisc"]).default("equilibre"),
   effort: z.enum(["passif", "modere", "actif"]).default("modere"),
   // Optionnel flip
@@ -61,7 +72,9 @@ export const generateAnalysis = createServerFn({ method: "POST" })
       .single();
     if (quotaError) {
       if (quotaError.message?.includes("QUOTA_EXCEEDED")) {
-        throw new Error(`Quota mensuel atteint pour le plan ${plan}. Passez à un plan supérieur ou attendez la réinitialisation.`);
+        throw new Error(
+          `Quota mensuel atteint pour le plan ${plan}. Passez à un plan supérieur ou attendez la réinitialisation.`,
+        );
       }
       throw new Error(quotaError.message);
     }
@@ -100,9 +113,10 @@ export const generateAnalysis = createServerFn({ method: "POST" })
         airbnbNightly: data.airbnbNightly,
         airbnbOccupancy: data.airbnbOccupancy,
       },
-      financing: data.loanAmount > 0
-        ? { loanAmount: data.loanAmount, rateAPR: data.loanRate, durationYears: data.loanYears }
-        : undefined,
+      financing:
+        data.loanAmount > 0
+          ? { loanAmount: data.loanAmount, rateAPR: data.loanRate, durationYears: data.loanYears }
+          : undefined,
       fiscal: { tmi: data.tmi as TMI, isClasseTourisme: data.isClasseTourisme },
     };
 
@@ -121,7 +135,9 @@ export const generateAnalysis = createServerFn({ method: "POST" })
         acquisitionCost,
         worksBudget: data.worksBudget,
         holdingMonths: data.holdingMonths,
-        monthlyHoldingCost: Math.round((data.propertyTax + data.copro) / 12 + (data.loanAmount * data.loanRate) / 12),
+        monthlyHoldingCost: Math.round(
+          (data.propertyTax + data.copro) / 12 + (data.loanAmount * data.loanRate) / 12,
+        ),
         estimatedResalePrice: data.estimatedResalePrice,
         tmi: data.tmi as TMI,
       });
@@ -133,9 +149,10 @@ export const generateAnalysis = createServerFn({ method: "POST" })
     // 5bis. Verdict déterministe (score /100 + décision + prix max conseillé)
     const { computeVerdict, findMaxRecommendedPrice, scoreOnly } = await import("./verdict");
     const winnerKey = (aiAnalysis.winnerStrategy as any) ?? matched.ranked[0]?.strategy ?? null;
-    const winner = winnerKey && winnerKey !== "aucune"
-      ? matched.strategies.find((s) => s.strategy === winnerKey) ?? matched.ranked[0] ?? null
-      : matched.ranked[0] ?? null;
+    const winner =
+      winnerKey && winnerKey !== "aucune"
+        ? (matched.strategies.find((s) => s.strategy === winnerKey) ?? matched.ranked[0] ?? null)
+        : (matched.ranked[0] ?? null);
 
     // Pricing marché : on tente une lecture du snapshot CP si dispo
     let priceSqmAvg: number | null = null;
@@ -218,7 +235,9 @@ export const listAnalyses = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data: rows, error } = await supabase
       .from("analyses")
-      .select("id, city_name, property_type, surface_sqm, purchase_price, user_profile, calc, ai_analysis, created_at")
+      .select(
+        "id, city_name, property_type, surface_sqm, purchase_price, user_profile, calc, ai_analysis, created_at",
+      )
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
@@ -248,26 +267,26 @@ export const deleteAnalysis = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("analyses").delete().eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("analyses")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
 
 // ---------------- getCities ----------------
-export const getCities = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-    );
-    const { data: rows, error } = await supabase
-      .from("city_data")
-      .select("city_name")
-      .order("city_name");
-    if (error) throw new Error(error.message);
-    return (rows ?? []).map((r: any) => r.city_name as string);
-  });
+export const getCities = createServerFn({ method: "GET" }).handler(async () => {
+  const { createClient } = await import("@supabase/supabase-js");
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
+  const { data: rows, error } = await supabase
+    .from("city_data")
+    .select("city_name")
+    .order("city_name");
+  if (error) throw new Error(error.message);
+  return (rows ?? []).map((r: any) => r.city_name as string);
+});
 
 // ---------------- getCityData ----------------
 // Renvoie les indicateurs de marché pour pré-remplir le formulaire.
@@ -275,20 +294,20 @@ export const getCityData = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ cityName: z.string().min(1).max(100) }).parse(d))
   .handler(async ({ data }) => {
     const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-    );
+    const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
     const { data: row } = await supabase
       .from("city_data")
-      .select("city_name, rent_sqm_furnished, rent_sqm_unfurnished, price_sqm_avg, adr_studio, adr_t2, adr_t3, occupancy_rate, rent_room_coliving, regulation_level, regulation_notes")
+      .select(
+        "city_name, rent_sqm_furnished, rent_sqm_unfurnished, price_sqm_avg, adr_studio, adr_t2, adr_t3, occupancy_rate, rent_room_coliving, regulation_level, regulation_notes",
+      )
       .ilike("city_name", data.cityName)
       .maybeSingle();
     if (!row) return null;
     return {
       cityName: row.city_name as string,
       rentSqmFurnished: row.rent_sqm_furnished == null ? null : Number(row.rent_sqm_furnished),
-      rentSqmUnfurnished: row.rent_sqm_unfurnished == null ? null : Number(row.rent_sqm_unfurnished),
+      rentSqmUnfurnished:
+        row.rent_sqm_unfurnished == null ? null : Number(row.rent_sqm_unfurnished),
       priceSqmAvg: row.price_sqm_avg == null ? null : Number(row.price_sqm_avg),
       adrStudio: row.adr_studio == null ? null : Number(row.adr_studio),
       adrT2: row.adr_t2 == null ? null : Number(row.adr_t2),
@@ -304,9 +323,7 @@ export const getCityData = createServerFn({ method: "POST" })
 // L'utilisateur signale une ville absente de la base.
 export const requestCity = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ cityName: z.string().min(2).max(100) }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ cityName: z.string().min(2).max(100) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const { error } = await supabase.from("city_requests").insert({
@@ -394,14 +411,16 @@ IMPORTANT — la réponse JSON DOIT contenir EXACTEMENT ces clés (pas de varian
     const { experimental_output: out } = await generateText({
       model: gateway("google/gemini-3-flash-preview"),
       experimental_output: Output.object({
-        schema: zod.object({
-          winnerStrategy: zod.string(),
-          rationale: zod.string(),
-          forces: zod.array(zod.string()).max(5).optional().default([]),
-          strengths: zod.array(zod.string()).max(5).optional(),
-          risks: zod.array(zod.string()).max(5).optional().default([]),
-          recommendations: zod.array(zod.string()).max(5).optional().default([]),
-        }).passthrough(),
+        schema: zod
+          .object({
+            winnerStrategy: zod.string(),
+            rationale: zod.string(),
+            forces: zod.array(zod.string()).max(5).optional().default([]),
+            strengths: zod.array(zod.string()).max(5).optional(),
+            risks: zod.array(zod.string()).max(5).optional().default([]),
+            recommendations: zod.array(zod.string()).max(5).optional().default([]),
+          })
+          .passthrough(),
       }),
       prompt,
     });
@@ -430,7 +449,9 @@ function fallbackArbiter(args: {
       rationale: "Aucune stratégie n'est éligible avec les données fournies.",
       forces: [],
       risks: ["Toutes les stratégies écartées — revoir les hypothèses de loyer/charges."],
-      recommendations: ["Compléter les loyers de marché (nu, meublé, ou Airbnb) pour activer au moins une stratégie."],
+      recommendations: [
+        "Compléter les loyers de marché (nu, meublé, ou Airbnb) pour activer au moins une stratégie.",
+      ],
     };
   }
   return {
@@ -438,6 +459,8 @@ function fallbackArbiter(args: {
     rationale: `Stratégie ${top.strategy} en tête avec un cashflow de ${top.monthlyNetCashflow}€/mois et un rendement net de ${top.netYieldPct}%.`,
     forces: top.scoreReasons.slice(0, 3),
     risks: top.notes.filter((n) => n.startsWith("⚠️")),
-    recommendations: ["Faire valider les hypothèses de loyer auprès de 2-3 agences locales avant signature."],
+    recommendations: [
+      "Faire valider les hypothèses de loyer auprès de 2-3 agences locales avant signature.",
+    ],
   };
 }

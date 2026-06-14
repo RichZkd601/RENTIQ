@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getAnalysis } from "@/lib/analysis.functions";
-import { AlertTriangle, ArrowRight, CheckCircle2, Download, Info, Loader2, Pencil, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, CheckCircle2, Download, Info, Loader2, Pencil, XCircle } from "lucide-react";
 import { generateAnalysisPdf } from "@/lib/pdf";
 import { track } from "@/lib/analytics";
 import type { StrategyKey } from "@/lib/calculator";
@@ -410,6 +410,11 @@ function AnalysePage() {
         </Button>
         <Button variant="outline" onClick={downloadPdf}>
           <Download className="mr-1 h-4 w-4" />Télécharger en PDF
+        </Button>
+        <Button variant="outline" asChild>
+          <Link to="/patrimoine/nouveau" search={{ fromAnalysis: id }}>
+            <Building2 className="mr-1 h-4 w-4" />Ajouter à mon patrimoine
+          </Link>
         </Button>
         <Button variant="outline" asChild>
           <Link to="/historique">Voir l'historique</Link>

@@ -73,11 +73,19 @@ export function remainingBalanceAfter(
 }
 
 /** État d'amortissement complet à une date d'observation. */
-export function amortizationStateAt(terms: LoanTerms, asOf: string | Date = new Date()): AmortizationState {
+export function amortizationStateAt(
+  terms: LoanTerms,
+  asOf: string | Date = new Date(),
+): AmortizationState {
   const n = terms.durationYears * 12;
   const m = monthlyPayment(terms.principal, terms.rateAPR, terms.durationYears);
   const elapsed = Math.min(monthsBetween(terms.startDate, asOf), n);
-  const remaining = remainingBalanceAfter(terms.principal, terms.rateAPR, terms.durationYears, elapsed);
+  const remaining = remainingBalanceAfter(
+    terms.principal,
+    terms.rateAPR,
+    terms.durationYears,
+    elapsed,
+  );
   const principalPaid = Math.max(0, Math.round(terms.principal - remaining));
   const interestPaid = Math.max(0, Math.round(m * elapsed - principalPaid));
   return {
@@ -128,9 +136,10 @@ export function assessRefinancing(args: {
   const state = amortizationStateAt(args.terms, asOf);
   const yearsRemaining = state.monthsRemaining / 12;
 
-  const newMonthly = yearsRemaining > 0
-    ? monthlyPayment(state.remainingBalance, args.marketRateAPR, yearsRemaining)
-    : 0;
+  const newMonthly =
+    yearsRemaining > 0
+      ? monthlyPayment(state.remainingBalance, args.marketRateAPR, yearsRemaining)
+      : 0;
   const monthlySaving = Math.round(state.monthlyPayment - newMonthly);
 
   const unlocked = Math.max(0, Math.round(args.currentValue * ltv - state.remainingBalance));
@@ -147,5 +156,7 @@ export function assessRefinancing(args: {
 
 /** Âge du prêt en mois — utilitaire pour les règles métier. */
 export function loanAgeMonths(startDate: string | Date, asOf: string | Date = new Date()): number {
-  return Math.round((new Date(asOf).getTime() - new Date(startDate).getTime()) / (MS_PER_DAY * 30.4375));
+  return Math.round(
+    (new Date(asOf).getTime() - new Date(startDate).getTime()) / (MS_PER_DAY * 30.4375),
+  );
 }

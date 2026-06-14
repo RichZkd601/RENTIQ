@@ -14,7 +14,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { scoreOpportunity, type CandidateListing, type InvestorProfile } from "./opportunityScore";
 import type { StrategyKey, TMI } from "./calculator";
 
-const STRATEGY = z.enum(["location_nue", "lmnp_longue_duree", "bail_mobilite", "colocation", "coliving", "airbnb"]);
+const STRATEGY = z.enum([
+  "location_nue",
+  "lmnp_longue_duree",
+  "bail_mobilite",
+  "colocation",
+  "coliving",
+  "airbnb",
+]);
 const TMI_VALUES = [0, 0.11, 0.3, 0.41, 0.45] as const;
 
 function rowToInvestorProfile(row: any): InvestorProfile {
@@ -33,13 +40,19 @@ function rowToInvestorProfile(row: any): InvestorProfile {
 const ProfileInput = z.object({
   label: z.string().min(1).max(120),
   cityName: z.string().min(1).max(100),
-  postalCode: z.string().regex(/^\d{5}$/).optional(),
+  postalCode: z
+    .string()
+    .regex(/^\d{5}$/)
+    .optional(),
   propertyType: z.enum(["studio", "t2", "t3", "t4_plus", "maison"]).optional(),
   maxBudget: z.number().min(10_000).max(20_000_000),
   strategy: STRATEGY,
   minMonthlyCashflow: z.number().min(-2000).max(20_000).default(0),
   minNetYieldPct: z.number().min(0).max(30).optional(),
-  tmi: z.number().refine((v) => (TMI_VALUES as readonly number[]).includes(v)).default(0.3),
+  tmi: z
+    .number()
+    .refine((v) => (TMI_VALUES as readonly number[]).includes(v))
+    .default(0.3),
   downPaymentPct: z.number().min(0).max(1).default(0.1),
   active: z.boolean().default(true),
 });
@@ -103,7 +116,11 @@ export const updateInvestorProfile = createServerFn({ method: "POST" })
     if (rest.tmi !== undefined) patch.tmi = rest.tmi;
     if (rest.downPaymentPct !== undefined) patch.down_payment_pct = rest.downPaymentPct;
     if (rest.active !== undefined) patch.active = rest.active;
-    const { error } = await supabase.from("investor_profiles").update(patch as never).eq("id", id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("investor_profiles")
+      .update(patch as never)
+      .eq("id", id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -113,7 +130,11 @@ export const deleteInvestorProfile = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("investor_profiles").delete().eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("investor_profiles")
+      .delete()
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -122,7 +143,9 @@ export const deleteInvestorProfile = createServerFn({ method: "POST" })
 export const listOpportunities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ profileId: z.string().uuid().optional(), onlyMatches: z.boolean().optional() }).parse(d ?? {}),
+    z
+      .object({ profileId: z.string().uuid().optional(), onlyMatches: z.boolean().optional() })
+      .parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -236,8 +259,12 @@ export const scanProfile = createServerFn({ method: "POST" })
       .ilike("city_name", profRow.city_name)
       .maybeSingle();
     const priceSqm = city?.price_sqm_avg ? Number(city.price_sqm_avg) : profile.maxBudget / 55;
-    const rentSqmFurnished = city?.rent_sqm_furnished ? Number(city.rent_sqm_furnished) : priceSqm * 0.0038;
-    const rentSqmUnfurnished = city?.rent_sqm_unfurnished ? Number(city.rent_sqm_unfurnished) : rentSqmFurnished * 0.88;
+    const rentSqmFurnished = city?.rent_sqm_furnished
+      ? Number(city.rent_sqm_furnished)
+      : priceSqm * 0.0038;
+    const rentSqmUnfurnished = city?.rent_sqm_unfurnished
+      ? Number(city.rent_sqm_unfurnished)
+      : rentSqmFurnished * 0.88;
 
     // 5 candidates : surface dimensionnée au budget, décote de prix variable.
     const baseSurface = Math.max(18, Math.round((profile.maxBudget * 0.92) / priceSqm));
@@ -255,7 +282,8 @@ export const scanProfile = createServerFn({ method: "POST" })
         price,
         monthlyRentNu: Math.round(surface * rentSqmUnfurnished),
         monthlyRentMeuble: Math.round(surface * rentSqmFurnished),
-        colocRoomRent: rooms >= 3 ? Math.round(surface * rentSqmFurnished / rooms * 1.15) : undefined,
+        colocRoomRent:
+          rooms >= 3 ? Math.round(((surface * rentSqmFurnished) / rooms) * 1.15) : undefined,
         colocRoomCount: rooms >= 3 ? rooms - 1 : undefined,
       };
     });
@@ -286,14 +314,20 @@ export const scanProfile = createServerFn({ method: "POST" })
       });
     }
 
-    await supabase.from("investor_profiles").update({ last_scanned_at: new Date().toISOString() }).eq("id", data.profileId);
+    await supabase
+      .from("investor_profiles")
+      .update({ last_scanned_at: new Date().toISOString() })
+      .eq("id", data.profileId);
 
     if (detected > 0) {
       await supabase.from("notifications").insert({
         user_id: userId,
         kind: "opportunity",
         title: `${detected} opportunité${detected > 1 ? "s" : ""} détectée${detected > 1 ? "s" : ""} sur « ${profRow.label} »`,
-        body: matched > 0 ? `${matched} correspond${matched > 1 ? "ent" : ""} à tous vos critères.` : "À examiner dans votre radar.",
+        body:
+          matched > 0
+            ? `${matched} correspond${matched > 1 ? "ent" : ""} à tous vos critères.`
+            : "À examiner dans votre radar.",
         link: "/radar",
       });
     }
@@ -304,11 +338,20 @@ export const scanProfile = createServerFn({ method: "POST" })
 export const updateOpportunityStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), status: z.enum(["new", "seen", "saved", "dismissed", "analyzed"]) }).parse(d),
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["new", "seen", "saved", "dismissed", "analyzed"]),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("opportunities").update({ status: data.status }).eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("opportunities")
+      .update({ status: data.status })
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

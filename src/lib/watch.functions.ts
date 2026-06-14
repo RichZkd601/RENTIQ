@@ -47,7 +47,8 @@ export const listRegulatoryAlerts = createServerFn({ method: "GET" })
       .map((a: any) => {
         const impacted = (props ?? []).filter(
           (p: any) =>
-            (a.city_name == null || p.city_name?.toLowerCase() === String(a.city_name).toLowerCase()) &&
+            (a.city_name == null ||
+              p.city_name?.toLowerCase() === String(a.city_name).toLowerCase()) &&
             (a.strategy == null || p.strategy === a.strategy),
         );
         return {
@@ -75,12 +76,15 @@ export const setAlertStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase
-      .from("regulatory_alert_reads")
-      .upsert(
-        { alert_id: data.alertId, user_id: userId, status: data.status, updated_at: new Date().toISOString() },
-        { onConflict: "alert_id,user_id" },
-      );
+    const { error } = await supabase.from("regulatory_alert_reads").upsert(
+      {
+        alert_id: data.alertId,
+        user_id: userId,
+        status: data.status,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "alert_id,user_id" },
+    );
     if (error) throw new Error(error.message);
     return { ok: true };
   });

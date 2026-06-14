@@ -103,7 +103,10 @@ export const generatePortfolioRecommendations = createServerFn({ method: "POST" 
         user_id: userId,
         kind: "recommendation",
         title: `${all.length} recommandation${all.length > 1 ? "s" : ""} sur votre patrimoine`,
-        body: totalMonthly > 0 ? `Potentiel de +${Math.round(totalMonthly)} €/mois identifié.` : "Nouvelles pistes d'optimisation.",
+        body:
+          totalMonthly > 0
+            ? `Potentiel de +${Math.round(totalMonthly)} €/mois identifié.`
+            : "Nouvelles pistes d'optimisation.",
         link: "/recommandations",
       });
     }
@@ -137,7 +140,11 @@ export const updateRecommendationStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const { error } = await supabase.from("recommendations").update({ status: data.status }).eq("id", data.id).eq("user_id", userId);
+    const { error } = await supabase
+      .from("recommendations")
+      .update({ status: data.status })
+      .eq("id", data.id)
+      .eq("user_id", userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
