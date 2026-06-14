@@ -190,6 +190,55 @@ export function rankProperties(properties: PortfolioProperty[], asOf: string | D
   };
 }
 
+export interface ValuationPoint {
+  /** Date de la valorisation (ISO). */
+  date: string;
+  value: number;
+}
+
+export interface NetWorthPoint {
+  /** Fin de mois au format YYYY-MM. */
+  month: string;
+  value: number;
+  debt: number;
+  netWorth: number;
+}
+
+/**
+ * Construit la timeline mensuelle de la valeur nette du portefeuille sur les
+ * `months` derniers mois. Pour chaque mois : valeur = dernière valorisation
+ * connue à cette date (à défaut, prix d'achat si déjà acquis), dette = capital
+ * restant dû à cette date. Déterministe, sert au graphe du cockpit.
+ */
+export function netWorthTimeline(
+  properties: Array<PortfolioProperty & { valuations?: ValuationPoint[] }>,
+  opts: { months: number; asOf?: string | Date } = { months: 12 },
+): NetWorthPoint[] {
+  const asOf = new Date(opts.asOf ?? new Date());
+  const owned = properties.filter((p) => (p.status ?? "owned") !== "prospect");
+  const points: NetWorthPoint[] = [];
+
+  for (let i = opts.months - 1; i >= 0; i--) {
+    const d = new Date(asOf.getFullYear(), asOf.getMonth() - i + 1, 0); // dernier jour du mois
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    let value = 0;
+    let debt = 0;
+
+    for (const p of owned) {
+      const purchased = new Date(p.purchaseDate) <= d;
+      if (!purchased) continue;
+      // Valeur : dernière valorisation <= d, sinon prix d'achat.
+      const vals = (p.valuations ?? [])
+        .filter((v) => new Date(v.date) <= d)
+        .sort((a, b) => +new Date(b.date) - +new Date(a.date));
+      value += vals[0]?.value ?? p.purchasePrice;
+      if (p.loan) debt += amortizationStateAt(p.loan, d).remainingBalance;
+    }
+    points.push({ month: monthKey, value: Math.round(value), debt: Math.round(debt), netWorth: Math.round(value - debt) });
+  }
+  return points;
+}
+
 /**
  * Projette le cashflow net annuel à N années en supposant l'extinction
  * progressive de la dette (la mensualité disparaît une fois le prêt soldé).

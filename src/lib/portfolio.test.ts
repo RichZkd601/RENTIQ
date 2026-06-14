@@ -4,12 +4,15 @@ import {
   portfolioSummary,
   rankProperties,
   projectCashflow,
+  netWorthTimeline,
   type PortfolioProperty,
 } from "./portfolio";
 
 const asOf = "2025-01-01";
 
-function mk(over: Partial<PortfolioProperty> & { id: string }): PortfolioProperty {
+function mk(
+  over: Partial<PortfolioProperty> & { id: string; valuations?: Array<{ date: string; value: number }> },
+): PortfolioProperty & { valuations?: Array<{ date: string; value: number }> } {
   return {
     label: "Bien",
     cityName: "Rennes",
@@ -142,5 +145,45 @@ describe("projectCashflow", () => {
   it("sans prêt, le cashflow projeté est stable", () => {
     const props = [mk({ id: "a", loan: null, monthlyCashflowNet: 100 })];
     expect(projectCashflow(props, 5, "2025-01-01")).toBe(1200);
+  });
+});
+
+describe("netWorthTimeline", () => {
+  it("renvoie un point par mois et termine sur le mois courant", () => {
+    const series = netWorthTimeline([mk({ id: "a" })], { months: 12, asOf: "2025-06-15" });
+    expect(series).toHaveLength(12);
+    expect(series[series.length - 1].month).toBe("2025-06");
+    expect(series[0].month).toBe("2024-07");
+  });
+
+  it("valeur nette = valeur − dette à chaque point, dette décroissante", () => {
+    const series = netWorthTimeline([mk({ id: "a" })], { months: 6, asOf: "2025-06-15" });
+    for (const pt of series) expect(pt.netWorth).toBe(pt.value - pt.debt);
+    // La dette diminue avec le temps (amortissement).
+    expect(series[series.length - 1].debt).toBeLessThan(series[0].debt);
+  });
+
+  it("utilise la dernière valorisation connue avant la date", () => {
+    const p = mk({
+      id: "a",
+      purchasePrice: 200_000,
+      purchaseDate: "2020-01-01",
+      loan: null,
+      valuations: [
+        { date: "2025-03-01", value: 250_000 },
+        { date: "2025-05-01", value: 270_000 },
+      ],
+    });
+    const series = netWorthTimeline([p], { months: 6, asOf: "2025-06-15" });
+    expect(series.find((s) => s.month === "2025-02")?.value).toBe(200_000); // avant 1re valo
+    expect(series.find((s) => s.month === "2025-04")?.value).toBe(250_000);
+    expect(series.find((s) => s.month === "2025-06")?.value).toBe(270_000);
+  });
+
+  it("exclut un bien pas encore acquis à la date du point", () => {
+    const p = mk({ id: "a", purchaseDate: "2025-05-01", loan: null });
+    const series = netWorthTimeline([p], { months: 6, asOf: "2025-06-15" });
+    expect(series.find((s) => s.month === "2025-02")?.value).toBe(0);
+    expect(series.find((s) => s.month === "2025-06")?.value).toBeGreaterThan(0);
   });
 });
