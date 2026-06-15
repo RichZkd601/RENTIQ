@@ -19,10 +19,11 @@ portefeuille entier.
 | V4      | Recommandations automatiques | `/recommandations`                      | ✅ Livré  |
 | V5      | Conseiller patrimonial IA    | `/assistant`                            | ✅ Livré  |
 
-¹ Le scoring d'opportunités est réel ; la **source d'annonces temps réel**
-(scraping via Firecrawl) est en Phase 2 de la roadmap. En attendant, le radar
-score de vraies annonces saisies à la main et démontre la valeur sur des
-candidates synthétiques explicitement étiquetées « démo ».
+¹ Le scoring d'opportunités est réel **et** la source d'annonces est branchée :
+import d'une URL LeBonCoin / SeLoger / Bien'ici / PAP (ou d'une page de
+résultats) via **Firecrawl**, activé par `FIRECRAWL_API_KEY`. Sans la clé, le
+radar bascule sur des candidates de démonstration (étiquetées « démo ») et
+l'import manuel reste disponible.
 
 ## Principe invariant
 
@@ -46,6 +47,8 @@ Gateway (Gemini) · Tailwind v4 + shadcn/ui · Paddle · Cloudflare Workers.
 | `loanSchedule.ts`    | Amortissement, capital restant, refinancement          | ✔     |
 | `portfolio.ts`       | KPIs cockpit, ranking, timeline valeur nette           | ✔     |
 | `opportunityScore.ts`| Scoring annonce vs profil investisseur                 | ✔     |
+| `listingExtraction.ts`| Normalisation d'annonce scrapée → candidate scorable  | ✔     |
+| `firecrawl.server.ts`| Scraping réel des annonces (Firecrawl)                 |       |
 | `recommendations.ts` | Leviers d'optimisation (loyer, stratégie, refi…)       | ✔     |
 | `assistant.ts`       | Contexte + réponses chiffrées grounded                 | ✔     |
 
@@ -57,13 +60,16 @@ Start) sécurisées par `requireSupabaseAuth` et la RLS Supabase.
 ```bash
 bun install          # ou npm install
 bun run dev          # serveur de dev
-npx vitest run       # 74 tests (cœur déterministe)
+npx vitest run       # 91 tests (cœur déterministe)
 npx tsc --noEmit     # typecheck
 ```
 
 Variables d'environnement : voir `.env` (`SUPABASE_URL`,
-`SUPABASE_PUBLISHABLE_KEY`, …). La clé IA (`LOVABLE_API_KEY`) est optionnelle —
-sans elle, l'arbitre et le conseiller servent leurs réponses déterministes.
+`SUPABASE_PUBLISHABLE_KEY`, …). Deux clés optionnelles :
+- `LOVABLE_API_KEY` — sans elle, l'arbitre et le conseiller servent leurs
+  réponses déterministes ;
+- `FIRECRAWL_API_KEY` — active l'import réel d'annonces dans le radar ; sans
+  elle, le radar utilise des candidates de démonstration.
 
 ## Migrations
 

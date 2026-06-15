@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Radar, Loader2, Plus, RefreshCw, Trash2, Target } from "lucide-react";
+import { Radar, Loader2, Plus, RefreshCw, Trash2, Target, Link2, Download } from "lucide-react";
 import { toast } from "sonner";
 import {
   listInvestorProfiles,
@@ -23,6 +23,7 @@ import {
   scanProfile,
   listOpportunities,
   updateOpportunityStatus,
+  addOpportunityFromUrl,
 } from "@/lib/radar.functions";
 
 const eur = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} €`;
@@ -47,6 +48,7 @@ function RadarPage() {
   const scan = useServerFn(scanProfile);
   const listOpp = useServerFn(listOpportunities);
   const setStatus = useServerFn(updateOpportunityStatus);
+  const importUrl = useServerFn(addOpportunityFromUrl);
 
   const profiles = useQuery({ queryKey: ["investor-profiles"], queryFn: () => list({}) });
   const opps = useQuery({ queryKey: ["opportunities"], queryFn: () => listOpp({ data: {} }) });
@@ -120,47 +122,18 @@ function RadarPage() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {profiles.data!.map((p: any) => (
-            <Card key={p.id}>
-              <CardContent className="space-y-2 py-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="font-medium">{p.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.city_name} · ≤ {eur(p.max_budget)} · {STRATEGY_LABELS[p.strategy]} · CF ≥{" "}
-                      {p.min_monthly_cashflow} €
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-rose-600"
-                    onClick={() => delM.mutate(p.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-muted-foreground">
-                    {p.last_scanned_at
-                      ? `Scanné le ${new Date(p.last_scanned_at).toLocaleDateString("fr-FR")}`
-                      : "Jamais scanné"}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => scanM.mutate(p.id)}
-                    disabled={scanM.isPending}
-                  >
-                    {scanM.isPending && scanM.variables === p.id ? (
-                      <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <RefreshCw className="mr-1 h-3.5 w-3.5" />
-                    )}
-                    Scanner
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <ProfileCard
+              key={p.id}
+              p={p}
+              onDelete={() => delM.mutate(p.id)}
+              onScan={() => scanM.mutate(p.id)}
+              scanning={scanM.isPending && scanM.variables === p.id}
+              onImport={(url) => importUrl({ data: { profileId: p.id, url } })}
+              onImported={() => {
+                opps.refetch();
+                profiles.refetch();
+              }}
+            />
           ))}
         </div>
       )}
@@ -192,20 +165,28 @@ function RadarPage() {
                       <Badge variant={o.matches ? "default" : "secondary"} className="text-[10px]">
                         {o.match_score}/100
                       </Badge>
-                      {o.source === "demo" && (
-                        <Badge variant="outline" className="text-[10px]">
-                          démo
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-[10px]">
+                        {o.source === "demo" ? "démo" : o.source}
+                      </Badge>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {eur(o.price)} · cashflow {o.monthly_cashflow >= 0 ? "+" : ""}
                       {Math.round(o.monthly_cashflow)} €/mois · {o.net_yield_pct}% net
                     </p>
                   </div>
-                  <Button variant="ghost" size="sm" onClick={() => dismissM.mutate(o.id)}>
-                    Ignorer
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {o.source_url && (
+                      <Button variant="ghost" size="sm" asChild>
+                        <a href={o.source_url} target="_blank" rel="noreferrer">
+                          <Link2 className="mr-1 h-3.5 w-3.5" />
+                          Annonce
+                        </a>
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={() => dismissM.mutate(o.id)}>
+                      Ignorer
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -213,6 +194,107 @@ function RadarPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function ProfileCard({
+  p,
+  onDelete,
+  onScan,
+  scanning,
+  onImport,
+  onImported,
+}: {
+  p: any;
+  onDelete: () => void;
+  onScan: () => void;
+  scanning: boolean;
+  onImport: (url: string) => Promise<any>;
+  onImported: () => void;
+}) {
+  const [url, setUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+
+  const runImport = async () => {
+    if (!url.trim()) return;
+    setImporting(true);
+    try {
+      const r = await onImport(url.trim());
+      toast.success(
+        r?.matched
+          ? "Annonce importée — elle correspond à vos critères !"
+          : "Annonce importée et scorée",
+      );
+      setUrl("");
+      onImported();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Import échoué");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="space-y-3 py-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <p className="font-medium">{p.label}</p>
+            <p className="text-xs text-muted-foreground">
+              {p.city_name} · ≤ {eur(p.max_budget)} · {STRATEGY_LABELS[p.strategy]} · CF ≥{" "}
+              {p.min_monthly_cashflow} €
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-rose-600" onClick={onDelete}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+
+        {/* Import d'une annonce réelle via son URL (Firecrawl) */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Link2 className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="Coller une URL LeBonCoin / SeLoger…"
+              className="h-8 pl-7 text-xs"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") runImport();
+              }}
+            />
+          </div>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={runImport}
+            disabled={importing || !url.trim()}
+          >
+            {importing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-muted-foreground">
+            {p.last_scanned_at
+              ? `Scanné le ${new Date(p.last_scanned_at).toLocaleDateString("fr-FR")}`
+              : "Jamais scanné"}
+          </span>
+          <Button size="sm" variant="outline" onClick={onScan} disabled={scanning}>
+            {scanning ? (
+              <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="mr-1 h-3.5 w-3.5" />
+            )}
+            Scanner
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

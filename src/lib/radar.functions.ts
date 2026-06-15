@@ -2,17 +2,25 @@
  * RentIQ — Server functions du radar d'opportunités (V3).
  *
  * Profils investisseur + détection/scoring d'annonces. Le scoring est réel
- * (moteur déterministe via opportunityScore). La source d'annonces réelle
- * (scraping LeBonCoin/SeLoger via Firecrawl) est prévue en V2 de la roadmap ;
- * en attendant, `scanProfile` synthétise des candidates à partir des données
- * de marché de la ville, explicitement marquées `source = "demo"`, et
- * `addOpportunity` permet de scorer une annonce réelle collée à la main.
+ * (moteur déterministe via opportunityScore). Trois sources d'annonces :
+ *  - `addOpportunityFromUrl` / `importListingsFromUrl` : SCRAPING RÉEL via
+ *    Firecrawl (LeBonCoin, SeLoger, Bien'ici, PAP…) — actif si FIRECRAWL_API_KEY ;
+ *  - `addOpportunity` : annonce réelle saisie à la main ;
+ *  - `scanProfile` : candidates synthétiques (`source = "demo"`), repli quand
+ *    le scraping n'est pas configuré.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { scoreOpportunity, type CandidateListing, type InvestorProfile } from "./opportunityScore";
 import type { StrategyKey, TMI } from "./calculator";
+import {
+  normalizeExtractedListing,
+  buildCandidateFromListing,
+  sourceFromUrl,
+  type MarketEstimate,
+  type RawListing,
+} from "./listingExtraction";
 
 const STRATEGY = z.enum([
   "location_nue",
@@ -355,3 +363,222 @@ export const updateOpportunityStatus = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ===========================================================================
+// Source d'annonces RÉELLE via Firecrawl
+// ===========================================================================
+
+/** Estimation de marché (loyer €/m², prix/m²) pour une commune. */
+async function getMarketEstimate(
+  supabase: any,
+  cityName: string,
+  postalCode?: string | null,
+): Promise<MarketEstimate> {
+  const est: MarketEstimate = {};
+  if (postalCode) {
+    const { data: snap } = await supabase
+      .from("market_snapshots")
+      .select("price_sqm_avg, rent_sqm_unfurnished, rent_sqm_furnished")
+      .eq("postal_code", postalCode)
+      .maybeSingle();
+    if (snap) {
+      est.priceSqmAvg = snap.price_sqm_avg != null ? Number(snap.price_sqm_avg) : undefined;
+      est.rentSqmUnfurnished =
+        snap.rent_sqm_unfurnished != null ? Number(snap.rent_sqm_unfurnished) : undefined;
+      est.rentSqmFurnished =
+        snap.rent_sqm_furnished != null ? Number(snap.rent_sqm_furnished) : undefined;
+    }
+  }
+  if (est.rentSqmUnfurnished == null || est.priceSqmAvg == null) {
+    const { data: city } = await supabase
+      .from("city_data")
+      .select("price_sqm_avg, rent_sqm_furnished, rent_sqm_unfurnished")
+      .ilike("city_name", cityName)
+      .maybeSingle();
+    if (city) {
+      est.priceSqmAvg =
+        est.priceSqmAvg ?? (city.price_sqm_avg != null ? Number(city.price_sqm_avg) : undefined);
+      est.rentSqmUnfurnished =
+        est.rentSqmUnfurnished ??
+        (city.rent_sqm_unfurnished != null ? Number(city.rent_sqm_unfurnished) : undefined);
+      est.rentSqmFurnished =
+        est.rentSqmFurnished ??
+        (city.rent_sqm_furnished != null ? Number(city.rent_sqm_furnished) : undefined);
+    }
+  }
+  return est;
+}
+
+/** Score une annonce normalisée et la persiste (dédup par source_url). */
+async function scoreAndPersistListing(args: {
+  supabase: any;
+  userId: string;
+  profileId: string;
+  profile: InvestorProfile;
+  profRow: any;
+  raw: RawListing;
+  url: string;
+}): Promise<{ inserted: boolean; matched: boolean; reason?: string }> {
+  const { supabase, userId, profileId, profile, profRow, raw, url } = args;
+  const listing = normalizeExtractedListing(raw);
+  const cityName = listing.cityName ?? profRow.city_name;
+  const market = await getMarketEstimate(supabase, cityName, listing.postalCode);
+  const { candidate, warnings } = buildCandidateFromListing(listing, cityName, market);
+  if (!candidate)
+    return { inserted: false, matched: false, reason: warnings[0] ?? "Données insuffisantes" };
+
+  const result = scoreOpportunity(profile, candidate);
+
+  // Dédup : même utilisateur + même URL.
+  const { data: existing } = await supabase
+    .from("opportunities")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("source_url", url)
+    .maybeSingle();
+  if (existing) return { inserted: false, matched: result.matches, reason: "Déjà importée" };
+
+  const { error } = await supabase.from("opportunities").insert({
+    user_id: userId,
+    investor_profile_id: profileId,
+    source: sourceFromUrl(url),
+    source_url: url,
+    city_name: cityName,
+    postal_code: listing.postalCode,
+    property_type: listing.propertyType,
+    surface_sqm: candidate.surfaceM2,
+    rooms: candidate.rooms,
+    price: candidate.price,
+    listing: { ...candidate, title: listing.title, imageUrl: listing.imageUrl, warnings } as any,
+    match_score: result.matchScore,
+    matches: result.matches,
+    monthly_cashflow: result.monthlyCashflow,
+    net_yield_pct: result.netYieldPct,
+    result: { ...result, warnings } as any,
+  });
+  if (error) throw new Error(error.message);
+  return { inserted: true, matched: result.matches };
+}
+
+async function loadProfile(supabase: any, userId: string, profileId: string) {
+  const { data: profRow, error } = await supabase
+    .from("investor_profiles")
+    .select("*")
+    .eq("id", profileId)
+    .eq("user_id", userId)
+    .single();
+  if (error || !profRow) throw new Error("Profil investisseur introuvable");
+  return profRow;
+}
+
+/** Importe et score UNE annonce depuis l'URL d'une page de détail. */
+export const addOpportunityFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ profileId: z.string().uuid(), url: z.string().url() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profRow = await loadProfile(supabase, userId, data.profileId);
+    const profile = rowToInvestorProfile(profRow);
+
+    const { scrapeListing, isFirecrawlConfigured } = await import("./firecrawl.server");
+    if (!isFirecrawlConfigured()) {
+      throw new Error(
+        "Import d'annonce indisponible : la clé FIRECRAWL_API_KEY n'est pas configurée. Vous pouvez ajouter l'annonce manuellement en attendant.",
+      );
+    }
+    const raw = await scrapeListing(data.url);
+    const res = await scoreAndPersistListing({
+      supabase,
+      userId,
+      profileId: data.profileId,
+      profile,
+      profRow,
+      raw,
+      url: data.url,
+    });
+    if (!res.inserted) throw new Error(res.reason ?? "Annonce non importée");
+
+    await supabase.from("notifications").insert({
+      user_id: userId,
+      kind: "opportunity",
+      title: `Annonce importée sur « ${profRow.label} »`,
+      body: res.matched ? "Elle correspond à tous vos critères." : "À examiner dans votre radar.",
+      link: "/radar",
+    });
+    return { inserted: true, matched: res.matched };
+  });
+
+/** Importe plusieurs annonces depuis une URL de page de résultats de recherche. */
+export const importListingsFromUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        profileId: z.string().uuid(),
+        url: z.string().url(),
+        max: z.number().int().min(1).max(25).default(15),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const profRow = await loadProfile(supabase, userId, data.profileId);
+    const profile = rowToInvestorProfile(profRow);
+
+    const { scrapeListings, isFirecrawlConfigured } = await import("./firecrawl.server");
+    if (!isFirecrawlConfigured()) {
+      throw new Error("Import indisponible : FIRECRAWL_API_KEY non configurée.");
+    }
+    const rawListings = await scrapeListings(data.url, data.max);
+
+    let inserted = 0;
+    let matched = 0;
+    for (const raw of rawListings) {
+      try {
+        const res = await scoreAndPersistListing({
+          supabase,
+          userId,
+          profileId: data.profileId,
+          profile,
+          profRow,
+          raw,
+          // Pas d'URL de détail fiable depuis une page de résultats : on évite
+          // la dédup par URL en suffixant l'URL source d'un hash de l'annonce.
+          url: `${data.url}#${stableListingKey(raw)}`,
+        });
+        if (res.inserted) {
+          inserted++;
+          if (res.matched) matched++;
+        }
+      } catch {
+        /* on continue sur l'annonce suivante */
+      }
+    }
+
+    await supabase
+      .from("investor_profiles")
+      .update({ last_scanned_at: new Date().toISOString() })
+      .eq("id", data.profileId);
+
+    if (inserted > 0) {
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        kind: "opportunity",
+        title: `${inserted} annonce${inserted > 1 ? "s" : ""} importée${inserted > 1 ? "s" : ""} sur « ${profRow.label} »`,
+        body:
+          matched > 0
+            ? `${matched} correspond${matched > 1 ? "ent" : ""} à vos critères.`
+            : "À examiner dans votre radar.",
+        link: "/radar",
+      });
+    }
+    return { inserted, matched, scanned: rawListings.length };
+  });
+
+/** Clé stable d'une annonce brute (dédup quand l'URL de détail manque). */
+function stableListingKey(raw: RawListing): string {
+  const norm = normalizeExtractedListing(raw);
+  return [norm.price, norm.surfaceM2, norm.postalCode, norm.rooms].join("-");
+}

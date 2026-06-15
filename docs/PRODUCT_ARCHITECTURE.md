@@ -120,10 +120,11 @@ matière. À déployer immédiatement après V1.
 
 ---
 
-### V3 — Radar d'opportunités _(livré ; source d'annonces réelle = roadmap)_
+### V3 — Radar d'opportunités _(livré, source réelle branchée)_
 
 **Fonctionnalités.** L'utilisateur crée un **profil investisseur** (ville,
-type, budget max, stratégie, cashflow minimum). RentIQ surveille les annonces,
+type, budget max, stratégie, cashflow minimum). RentIQ **importe de vraies
+annonces** (URL LeBonCoin / SeLoger / Bien'ici / PAP, ou page de résultats),
 **score automatiquement** chaque candidate (score /100, cashflow, rendement,
 match oui/non) et **notifie** : « 3 nouvelles opportunités détectées ce matin ».
 
@@ -134,17 +135,24 @@ match oui/non) et **notifie** : « 3 nouvelles opportunités détectées ce mati
 - `opportunityScore.ts` — `scoreOpportunity` (annonce passée au moteur sous la
   stratégie cible, confrontée aux seuils du profil), `rankOpportunities`.
   _(8 tests)_
-- `radar.functions.ts` — CRUD profils, `addOpportunity` (scorer une annonce
-  réelle collée à la main, **utilisable dès aujourd'hui**), `scanProfile`
-  (synthétise des candidates depuis les données de marché de la ville,
-  explicitement marquées `source = "demo"` tant que le scraper réel n'est pas
-  branché — le **scoring est réel**).
+- `listingExtraction.ts` (pur) — normalisation d'une annonce brute en
+  `CandidateListing` : parsing « à la française » (prix, surface, pièces, CP),
+  inférence du type de bien, et **estimation du loyer** (une annonce d'achat ne
+  contient pas de loyer) depuis le marché de la commune, avec repli sur le
+  prix/m². _(17 tests)_
+- `firecrawl.server.ts` — scraping réel via l'API Firecrawl (`/v1/scrape` +
+  extraction JSON), pour une page de détail ou une page de résultats.
+- `radar.functions.ts` — CRUD profils, `addOpportunityFromUrl` /
+  `importListingsFromUrl` (**scraping réel**, dédup par URL), `addOpportunity`
+  (saisie manuelle), `scanProfile` (candidates synthétiques `source = "demo"`,
+  **repli** quand `FIRECRAWL_API_KEY` n'est pas configurée).
 
-> **Honnêteté produit.** Le scraping LeBonCoin / SeLoger / Bien'ici / PAP (via
-> Firecrawl) est en **Phase 2 de la roadmap** (hors MVP). En attendant, le radar
-> score de vraies annonces saisies à la main et démontre la valeur sur des
-> candidates synthétiques clairement étiquetées « démo ». Brancher la source
-> réelle ne change **rien** au moteur de scoring.
+> **Architecture honnête.** Le scoring est **toujours réel** (moteur
+> déterministe). La source d'annonces est désormais branchée sur Firecrawl
+> (activée par `FIRECRAWL_API_KEY`) ; sans la clé, le radar bascule
+> automatiquement sur des candidates de démonstration explicitement étiquetées
+> « démo » et l'import manuel reste disponible. Brancher/débrancher la source
+> ne change **rien** au moteur de scoring.
 
 **Rétention générée.** **Maximale** — c'est l'axe qui crée une raison
 **quotidienne** d'ouvrir l'app (la notification du matin).
@@ -271,6 +279,8 @@ src/lib/
   loanSchedule.ts          V2  amortissement, refinancement             (+ tests)
   portfolio.ts             V2  KPIs cockpit, ranking, timeline          (+ tests)
   opportunityScore.ts      V3  scoring annonce vs profil investisseur   (+ tests)
+  listingExtraction.ts     V3  normalisation annonce scrapée (pur)      (+ tests)
+  firecrawl.server.ts      V3  scraping réel des annonces (Firecrawl)
   recommendations.ts       V4  leviers d'optimisation déterministes     (+ tests)
   assistant.ts             V5  contexte + réponses chiffrées grounded   (+ tests)
 
@@ -288,9 +298,10 @@ supabase/migrations/
   …_seed_regulatory_alerts.sql    veille réglementaire (Loi Le Meur…)
 ```
 
-**Tests.** 74 tests Vitest verts couvrant tout le cœur déterministe
+**Tests.** 91 tests Vitest verts couvrant tout le cœur déterministe
 (`calculator`, `strategyMatcher`, `loanSchedule`, `portfolio`,
-`recommendations`, `opportunityScore`, `assistant`). `tsc --noEmit` clean.
+`recommendations`, `opportunityScore`, `listingExtraction`, `assistant`).
+`tsc --noEmit` clean.
 
 ---
 
@@ -311,8 +322,9 @@ supabase/migrations/
 
 1. **Veille réglementaire dynamique** — alimenter `regulatory_alerts` via un
    cron éditorial + sources data.gouv, au-delà du seed initial.
-2. **Scraping temps réel (Phase 2)** — Firecrawl sur LeBonCoin / SeLoger /
-   Bien'ici / PAP alimentant `opportunities` (le scoring est déjà prêt).
+2. **Scraping automatisé (Phase 2)** — la brique Firecrawl est branchée
+   (`addOpportunityFromUrl` / `importListingsFromUrl`). Reste à industrialiser :
+   crawl périodique des pages de recherche par profil + planification.
 3. **Cron mensuel des recommandations** — déclencher
    `generatePortfolioRecommendations` pour tous les utilisateurs + e-mail digest.
 4. **Estimation de valeur automatique** — alimenter `property_valuations` depuis
