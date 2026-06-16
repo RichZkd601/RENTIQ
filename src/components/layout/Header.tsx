@@ -63,7 +63,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           {email ? (
             <>
-              <Button size="sm" variant="outline" asChild className="hidden sm:inline-flex">
+              <Button asChild className="hidden h-10 rounded-xl px-5 text-[15px] font-semibold shadow-card sm:inline-flex">
                 <Link to="/analyser">Évaluer une opportunité</Link>
               </Button>
               <Button size="sm" variant="ghost" onClick={signOut}>
