@@ -22,6 +22,7 @@ export type Database = {
           created_at: string
           down_payment: number | null
           estimated_resale_price: number | null
+          exterior: string | null
           furnishing_cost: number | null
           holding_months: number | null
           id: string
@@ -44,6 +45,7 @@ export type Database = {
           created_at?: string
           down_payment?: number | null
           estimated_resale_price?: number | null
+          exterior?: string | null
           furnishing_cost?: number | null
           holding_months?: number | null
           id?: string
@@ -66,6 +68,7 @@ export type Database = {
           created_at?: string
           down_payment?: number | null
           estimated_resale_price?: number | null
+          exterior?: string | null
           furnishing_cost?: number | null
           holding_months?: number | null
           id?: string
@@ -114,6 +117,83 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      assistant_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_conversations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assistant_messages: {
+        Row: {
+          content: string
+          context: Json | null
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          context?: Json | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          context?: Json | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistant_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "assistant_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistant_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       city_data: {
         Row: {
@@ -225,6 +305,71 @@ export type Database = {
           },
         ]
       }
+      investor_profiles: {
+        Row: {
+          active: boolean
+          city_name: string
+          created_at: string
+          down_payment_pct: number | null
+          id: string
+          label: string
+          last_scanned_at: string | null
+          max_budget: number
+          min_monthly_cashflow: number
+          min_net_yield_pct: number | null
+          postal_code: string | null
+          property_type: string | null
+          strategy: string
+          tmi: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          active?: boolean
+          city_name: string
+          created_at?: string
+          down_payment_pct?: number | null
+          id?: string
+          label: string
+          last_scanned_at?: string | null
+          max_budget: number
+          min_monthly_cashflow?: number
+          min_net_yield_pct?: number | null
+          postal_code?: string | null
+          property_type?: string | null
+          strategy: string
+          tmi?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          active?: boolean
+          city_name?: string
+          created_at?: string
+          down_payment_pct?: number | null
+          id?: string
+          label?: string
+          last_scanned_at?: string | null
+          max_budget?: number
+          min_monthly_cashflow?: number
+          min_net_yield_pct?: number | null
+          postal_code?: string | null
+          property_type?: string | null
+          strategy?: string
+          tmi?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "investor_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       market_snapshots: {
         Row: {
           commune_name: string
@@ -282,284 +427,46 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
+      notifications: {
         Row: {
-          analyses_used_this_month: number
-          created_at: string
-          default_profile: string | null
-          default_tmi: number | null
-          email: string
-          full_name: string | null
-          id: string
-          notify_email: boolean
-          onboarding_done: boolean
-          plan: string
-          quota_reset_at: string
-        }
-        Insert: {
-          analyses_used_this_month?: number
-          created_at?: string
-          default_profile?: string | null
-          default_tmi?: number | null
-          email: string
-          full_name?: string | null
-          id: string
-          notify_email?: boolean
-          onboarding_done?: boolean
-          plan?: string
-          quota_reset_at?: string
-        }
-        Update: {
-          analyses_used_this_month?: number
-          created_at?: string
-          default_profile?: string | null
-          default_tmi?: number | null
-          email?: string
-          full_name?: string | null
-          id?: string
-          notify_email?: boolean
-          onboarding_done?: boolean
-          plan?: string
-          quota_reset_at?: string
-        }
-        Relationships: []
-      }
-      subscriptions: {
-        Row: {
-          cancel_at_period_end: boolean | null
-          created_at: string | null
-          current_period_end: string | null
-          current_period_start: string | null
-          environment: string
-          id: string
-          paddle_customer_id: string
-          paddle_subscription_id: string
-          price_id: string
-          product_id: string
-          status: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          cancel_at_period_end?: boolean | null
-          created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          environment?: string
-          id?: string
-          paddle_customer_id: string
-          paddle_subscription_id: string
-          price_id: string
-          product_id: string
-          status?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          cancel_at_period_end?: boolean | null
-          created_at?: string | null
-          current_period_end?: string | null
-          current_period_start?: string | null
-          environment?: string
-          id?: string
-          paddle_customer_id?: string
-          paddle_subscription_id?: string
-          price_id?: string
-          product_id?: string
-          status?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      properties: {
-        Row: {
-          capital_invested: number | null
-          city_name: string
-          copro: number | null
-          created_at: string
-          current_value: number
-          furniture_budget: number | null
-          id: string
-          label: string
-          loan_amount: number | null
-          loan_rate: number | null
-          loan_start_date: string | null
-          loan_years: number | null
-          monthly_cashflow_net: number
-          monthly_rent_gross: number
-          net_yield_pct: number | null
-          notary_fees: number | null
-          notes: string | null
-          postal_code: string | null
-          property_tax: number | null
-          property_type: string | null
-          purchase_date: string
-          purchase_price: number
-          rooms: number | null
-          source_analysis_id: string | null
-          status: string
-          strategy: string | null
-          surface_sqm: number | null
-          tmi: number | null
-          updated_at: string
-          user_id: string
-          works_budget: number | null
-        }
-        Insert: {
-          capital_invested?: number | null
-          city_name: string
-          copro?: number | null
-          created_at?: string
-          current_value: number
-          furniture_budget?: number | null
-          id?: string
-          label: string
-          loan_amount?: number | null
-          loan_rate?: number | null
-          loan_start_date?: string | null
-          loan_years?: number | null
-          monthly_cashflow_net?: number
-          monthly_rent_gross?: number
-          net_yield_pct?: number | null
-          notary_fees?: number | null
-          notes?: string | null
-          postal_code?: string | null
-          property_tax?: number | null
-          property_type?: string | null
-          purchase_date?: string
-          purchase_price: number
-          rooms?: number | null
-          source_analysis_id?: string | null
-          status?: string
-          strategy?: string | null
-          surface_sqm?: number | null
-          tmi?: number | null
-          updated_at?: string
-          user_id: string
-          works_budget?: number | null
-        }
-        Update: {
-          capital_invested?: number | null
-          city_name?: string
-          copro?: number | null
-          created_at?: string
-          current_value?: number
-          furniture_budget?: number | null
-          id?: string
-          label?: string
-          loan_amount?: number | null
-          loan_rate?: number | null
-          loan_start_date?: string | null
-          loan_years?: number | null
-          monthly_cashflow_net?: number
-          monthly_rent_gross?: number
-          net_yield_pct?: number | null
-          notary_fees?: number | null
-          notes?: string | null
-          postal_code?: string | null
-          property_tax?: number | null
-          property_type?: string | null
-          purchase_date?: string
-          purchase_price?: number
-          rooms?: number | null
-          source_analysis_id?: string | null
-          status?: string
-          strategy?: string | null
-          surface_sqm?: number | null
-          tmi?: number | null
-          updated_at?: string
-          user_id?: string
-          works_budget?: number | null
-        }
-        Relationships: []
-      }
-      property_valuations: {
-        Row: {
+          body: string | null
           created_at: string
           id: string
-          property_id: string
-          source: string | null
-          user_id: string
-          value: number
-          valued_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          property_id: string
-          source?: string | null
-          user_id: string
-          value: number
-          valued_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          property_id?: string
-          source?: string | null
-          user_id?: string
-          value?: number
-          valued_at?: string
-        }
-        Relationships: []
-      }
-      investor_profiles: {
-        Row: {
-          active: boolean
-          city_name: string
-          created_at: string
-          down_payment_pct: number | null
-          id: string
-          label: string
-          last_scanned_at: string | null
-          max_budget: number
-          min_monthly_cashflow: number
-          min_net_yield_pct: number | null
-          postal_code: string | null
-          property_type: string | null
-          strategy: string
-          tmi: number | null
-          updated_at: string
+          kind: string
+          link: string | null
+          read: boolean
+          title: string
           user_id: string
         }
         Insert: {
-          active?: boolean
-          city_name: string
+          body?: string | null
           created_at?: string
-          down_payment_pct?: number | null
           id?: string
-          label: string
-          last_scanned_at?: string | null
-          max_budget: number
-          min_monthly_cashflow?: number
-          min_net_yield_pct?: number | null
-          postal_code?: string | null
-          property_type?: string | null
-          strategy: string
-          tmi?: number | null
-          updated_at?: string
+          kind: string
+          link?: string | null
+          read?: boolean
+          title: string
           user_id: string
         }
         Update: {
-          active?: boolean
-          city_name?: string
+          body?: string | null
           created_at?: string
-          down_payment_pct?: number | null
           id?: string
-          label?: string
-          last_scanned_at?: string | null
-          max_budget?: number
-          min_monthly_cashflow?: number
-          min_net_yield_pct?: number | null
-          postal_code?: string | null
-          property_type?: string | null
-          strategy?: string
-          tmi?: number | null
-          updated_at?: string
+          kind?: string
+          link?: string | null
+          read?: boolean
+          title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       opportunities: {
         Row: {
@@ -625,7 +532,229 @@ export type Database = {
           surface_sqm?: number | null
           user_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "opportunities_investor_profile_id_fkey"
+            columns: ["investor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "investor_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          analyses_used_this_month: number
+          created_at: string
+          default_profile: string | null
+          default_tmi: number | null
+          email: string
+          full_name: string | null
+          id: string
+          notify_email: boolean
+          onboarding_done: boolean
+          plan: string
+          quota_reset_at: string
+        }
+        Insert: {
+          analyses_used_this_month?: number
+          created_at?: string
+          default_profile?: string | null
+          default_tmi?: number | null
+          email: string
+          full_name?: string | null
+          id: string
+          notify_email?: boolean
+          onboarding_done?: boolean
+          plan?: string
+          quota_reset_at?: string
+        }
+        Update: {
+          analyses_used_this_month?: number
+          created_at?: string
+          default_profile?: string | null
+          default_tmi?: number | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          notify_email?: boolean
+          onboarding_done?: boolean
+          plan?: string
+          quota_reset_at?: string
+        }
         Relationships: []
+      }
+      properties: {
+        Row: {
+          capital_invested: number | null
+          city_name: string
+          copro: number | null
+          created_at: string
+          current_value: number
+          exterior: string | null
+          furniture_budget: number | null
+          id: string
+          label: string
+          loan_amount: number | null
+          loan_rate: number | null
+          loan_start_date: string | null
+          loan_years: number | null
+          monthly_cashflow_net: number
+          monthly_rent_gross: number
+          net_yield_pct: number | null
+          notary_fees: number | null
+          notes: string | null
+          postal_code: string | null
+          property_tax: number | null
+          property_type: string | null
+          purchase_date: string
+          purchase_price: number
+          rooms: number | null
+          source_analysis_id: string | null
+          status: string
+          strategy: string | null
+          surface_sqm: number | null
+          tmi: number | null
+          updated_at: string
+          user_id: string
+          works_budget: number | null
+        }
+        Insert: {
+          capital_invested?: number | null
+          city_name: string
+          copro?: number | null
+          created_at?: string
+          current_value: number
+          exterior?: string | null
+          furniture_budget?: number | null
+          id?: string
+          label: string
+          loan_amount?: number | null
+          loan_rate?: number | null
+          loan_start_date?: string | null
+          loan_years?: number | null
+          monthly_cashflow_net?: number
+          monthly_rent_gross?: number
+          net_yield_pct?: number | null
+          notary_fees?: number | null
+          notes?: string | null
+          postal_code?: string | null
+          property_tax?: number | null
+          property_type?: string | null
+          purchase_date?: string
+          purchase_price: number
+          rooms?: number | null
+          source_analysis_id?: string | null
+          status?: string
+          strategy?: string | null
+          surface_sqm?: number | null
+          tmi?: number | null
+          updated_at?: string
+          user_id: string
+          works_budget?: number | null
+        }
+        Update: {
+          capital_invested?: number | null
+          city_name?: string
+          copro?: number | null
+          created_at?: string
+          current_value?: number
+          exterior?: string | null
+          furniture_budget?: number | null
+          id?: string
+          label?: string
+          loan_amount?: number | null
+          loan_rate?: number | null
+          loan_start_date?: string | null
+          loan_years?: number | null
+          monthly_cashflow_net?: number
+          monthly_rent_gross?: number
+          net_yield_pct?: number | null
+          notary_fees?: number | null
+          notes?: string | null
+          postal_code?: string | null
+          property_tax?: number | null
+          property_type?: string | null
+          purchase_date?: string
+          purchase_price?: number
+          rooms?: number | null
+          source_analysis_id?: string | null
+          status?: string
+          strategy?: string | null
+          surface_sqm?: number | null
+          tmi?: number | null
+          updated_at?: string
+          user_id?: string
+          works_budget?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_source_analysis_id_fkey"
+            columns: ["source_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_valuations: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string
+          source: string | null
+          user_id: string
+          value: number
+          valued_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id: string
+          source?: string | null
+          user_id: string
+          value: number
+          valued_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string
+          source?: string | null
+          user_id?: string
+          value?: number
+          valued_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_valuations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_valuations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       recommendations: {
         Row: {
@@ -670,7 +799,58 @@ export type Database = {
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "recommendations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recommendations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regulatory_alert_reads: {
+        Row: {
+          alert_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alert_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alert_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulatory_alert_reads_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "regulatory_alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "regulatory_alert_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       regulatory_alerts: {
         Row: {
@@ -711,110 +891,50 @@ export type Database = {
         }
         Relationships: []
       }
-      regulatory_alert_reads: {
+      subscriptions: {
         Row: {
-          alert_id: string
+          cancel_at_period_end: boolean | null
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
+          id: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          price_id: string
+          product_id: string
           status: string
-          updated_at: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
-          alert_id: string
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          paddle_customer_id: string
+          paddle_subscription_id: string
+          price_id: string
+          product_id: string
           status?: string
-          updated_at?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
-          alert_id?: string
+          cancel_at_period_end?: boolean | null
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          paddle_customer_id?: string
+          paddle_subscription_id?: string
+          price_id?: string
+          product_id?: string
           status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      assistant_conversations: {
-        Row: {
-          created_at: string
-          id: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          title?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      assistant_messages: {
-        Row: {
-          content: string
-          context: Json | null
-          conversation_id: string
-          created_at: string
-          id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          context?: Json | null
-          conversation_id: string
-          created_at?: string
-          id?: string
-          role: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          context?: Json | null
-          conversation_id?: string
-          created_at?: string
-          id?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      notifications: {
-        Row: {
-          body: string | null
-          created_at: string
-          id: string
-          kind: string
-          link: string | null
-          read: boolean
-          title: string
-          user_id: string
-        }
-        Insert: {
-          body?: string | null
-          created_at?: string
-          id?: string
-          kind: string
-          link?: string | null
-          read?: boolean
-          title: string
-          user_id: string
-        }
-        Update: {
-          body?: string | null
-          created_at?: string
-          id?: string
-          kind?: string
-          link?: string | null
-          read?: boolean
-          title?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []

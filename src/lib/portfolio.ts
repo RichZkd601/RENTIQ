@@ -12,7 +12,7 @@
 import { amortizationStateAt, type LoanTerms } from "./loanSchedule";
 import type { StrategyKey } from "./calculator";
 
-export type PropertyStatus = "owned" | "prospect" | "sold";
+export type PropertyStatus = "owned" | "prospect" | "sold" | "primary_residence";
 
 export interface PortfolioProperty {
   id: string;
@@ -136,22 +136,28 @@ export function portfolioSummary(
   properties: PortfolioProperty[],
   asOf: string | Date = new Date(),
 ): PortfolioSummary {
-  const owned = properties.filter((p) => (p.status ?? "owned") === "owned");
-  const metrics = owned.map((p) => propertyMetrics(p, asOf));
+  // RP : on inclut sa valeur et sa dette dans le patrimoine net, mais pas dans
+  // les flux locatifs (pas de loyer, pas de cashflow).
+  const trackable = properties.filter((p) => {
+    const s = p.status ?? "owned";
+    return s === "owned" || s === "primary_residence";
+  });
+  const incomeProducing = trackable.filter((p) => p.status !== "primary_residence");
+  const metrics = trackable.map((p) => propertyMetrics(p, asOf));
 
-  const totalValue = owned.reduce((s, p) => s + p.currentValue, 0);
+  const totalValue = trackable.reduce((s, p) => s + p.currentValue, 0);
   const totalDebt = metrics.reduce((s, m) => s + m.remainingDebt, 0);
-  const monthlyCashflow = owned.reduce((s, p) => s + p.monthlyCashflowNet, 0);
-  const totalRent = owned.reduce((s, p) => s + p.monthlyRentGross, 0);
+  const monthlyCashflow = incomeProducing.reduce((s, p) => s + p.monthlyCashflowNet, 0);
+  const totalRent = incomeProducing.reduce((s, p) => s + p.monthlyRentGross, 0);
 
   // Rendement brut pondéré par valeur.
   const weightedYield =
     totalValue > 0
-      ? metrics.reduce((s, m, i) => s + m.grossYieldPct * (owned[i].currentValue / totalValue), 0)
+      ? metrics.reduce((s, m, i) => s + m.grossYieldPct * (trackable[i].currentValue / totalValue), 0)
       : 0;
 
   return {
-    propertyCount: owned.length,
+    propertyCount: trackable.length,
     totalValue: Math.round(totalValue),
     totalDebt: Math.round(totalDebt),
     netWorth: Math.round(totalValue - totalDebt),

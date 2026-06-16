@@ -26,7 +26,7 @@ const FLAG_LABELS: Record<string, string> = {
 };
 
 export const Route = createFileRoute("/_authenticated/patrimoine/")({
-  head: () => ({ meta: [{ title: "Mon patrimoine — RentIQ" }] }),
+  head: () => ({ meta: [{ title: "Mon portefeuille — RentIQ" }] }),
   component: PatrimoinePage,
 });
 
@@ -38,15 +38,15 @@ function PatrimoinePage() {
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Mon patrimoine</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Mon portefeuille immobilier</h1>
           <p className="text-sm text-muted-foreground">
-            Tous vos biens, leur performance et leur valeur nette.
+            Vue consolidée de vos actifs, de votre dette et de votre cashflow.
           </p>
         </div>
         <Button asChild>
           <Link to="/patrimoine/nouveau">
             <Plus className="mr-1 h-4 w-4" />
-            Ajouter un bien
+            Ajouter un actif
           </Link>
         </Button>
       </div>
@@ -60,18 +60,18 @@ function PatrimoinePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Aucun bien pour l'instant
+              Votre portefeuille est encore vierge
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              Ajoutez vos appartements et maisons pour activer le cockpit patrimonial, les
-              recommandations et le conseiller IA.
+              Ajoutez un actif détenu ou évaluez une nouvelle opportunité pour activer le cockpit
+              patrimonial, les arbitrages recommandés et le copilote IA.
             </p>
             <Button asChild>
               <Link to="/patrimoine/nouveau">
                 <Plus className="mr-1 h-4 w-4" />
-                Ajouter mon premier bien
+                Ajouter mon premier actif
               </Link>
             </Button>
           </CardContent>
@@ -89,11 +89,15 @@ function PatrimoinePage() {
                         {STRATEGY_LABELS[p.strategy] ?? p.strategy}
                       </Badge>
                     )}
-                    {p.status !== "owned" && (
+                    {p.status === "primary_residence" ? (
+                      <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100 text-[10px]">
+                        Résidence principale
+                      </Badge>
+                    ) : p.status !== "owned" ? (
                       <Badge variant="outline" className="text-[10px] uppercase">
                         {p.status}
                       </Badge>
-                    )}
+                    ) : null}
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {p.cityName} · valeur {eur(p.currentValue)} · equity {eur(p.equity)}
@@ -113,15 +117,28 @@ function PatrimoinePage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p
-                      className={`font-mono text-sm font-semibold ${p.monthlyCashflow >= 0 ? "text-emerald-600" : "text-rose-600"}`}
-                    >
-                      {p.monthlyCashflow >= 0 ? "+" : ""}
-                      {p.monthlyCashflow} €/mois
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {p.grossYieldPct}% brut · +{p.appreciationPct}% valeur
-                    </p>
+                    {p.status === "primary_residence" ? (
+                      <>
+                        <p className="font-mono text-sm font-semibold">{eur(p.equity)}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          equity · {p.appreciationPct >= 0 ? "+" : ""}
+                          {p.appreciationPct}% valeur
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p
+                          className={`font-mono text-sm font-semibold ${p.monthlyCashflow >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                        >
+                          {p.monthlyCashflow >= 0 ? "+" : ""}
+                          {p.monthlyCashflow} €/mois
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {p.grossYieldPct}% brut · {p.appreciationPct >= 0 ? "+" : ""}
+                          {p.appreciationPct}% valeur
+                        </p>
+                      </>
+                    )}
                   </div>
                   <Button variant="ghost" size="sm" asChild>
                     <Link to="/patrimoine/$id" params={{ id: p.id }}>

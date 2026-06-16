@@ -16,15 +16,15 @@ import {
 type Msg = { id?: string; role: "user" | "assistant"; content: string };
 
 const SUGGESTIONS = [
-  "Puis-je acheter un appartement de plus ?",
+  "Puis-je financer un actif supplémentaire ?",
   "Quel sera mon cashflow dans 5 ans ?",
-  "Quel est mon bien le moins performant ?",
-  "Dois-je vendre un de mes biens ?",
-  "Quel régime fiscal est le plus adapté ?",
+  "Quel actif sous-performe mon portefeuille ?",
+  "Dois-je arbitrer un actif de mon portefeuille ?",
+  "Quel régime fiscal optimise mon patrimoine ?",
 ];
 
 export const Route = createFileRoute("/_authenticated/assistant")({
-  head: () => ({ meta: [{ title: "Conseiller IA — RentIQ" }] }),
+  head: () => ({ meta: [{ title: "Copilote patrimonial — RentIQ" }] }),
   component: AssistantPage,
 });
 
@@ -89,10 +89,10 @@ function AssistantPage() {
       <div className="mb-4">
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <Sparkles className="h-6 w-6 text-primary" />
-          Conseiller patrimonial
+          Copilote patrimonial
         </h1>
         <p className="text-sm text-muted-foreground">
-          Je réponds à partir des données réelles de votre portefeuille.
+          Un copilote entraîné sur votre patrimoine, vos opportunités et le marché.
         </p>
       </div>
 
@@ -167,7 +167,7 @@ function AssistantPage() {
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Puis-je acheter un bien de plus ?"
+          placeholder="Demandez un arbitrage, une simulation, une explication…"
           disabled={sending || booting}
         />
         <Button type="submit" disabled={sending || booting || !input.trim()}>

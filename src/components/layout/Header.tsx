@@ -46,16 +46,16 @@ export function Header() {
                 Patrimoine
               </Link>
               <Link to="/radar" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Radar
+                Radar de marché
               </Link>
               <Link to="/recommandations" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Recommandations
+                Arbitrages
               </Link>
               <Link to="/veille" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Veille
+                Veille réglementaire
               </Link>
               <Link to="/assistant" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Conseiller
+                Copilote
               </Link>
             </>
           )}
@@ -64,7 +64,7 @@ export function Header() {
           {email ? (
             <>
               <Button size="sm" variant="outline" asChild className="hidden sm:inline-flex">
-                <Link to="/analyser">Analyser</Link>
+                <Link to="/analyser">Évaluer une opportunité</Link>
               </Button>
               <Button size="sm" variant="ghost" onClick={signOut}>
                 <LogOut className="h-4 w-4" />
@@ -73,10 +73,10 @@ export function Header() {
           ) : (
             <>
               <Button size="sm" variant="ghost" asChild>
-                <Link to="/auth">Connexion</Link>
+                <Link to="/auth">Se connecter</Link>
               </Button>
               <Button size="sm" asChild>
-                <Link to="/auth">Démarrer</Link>
+                <Link to="/auth">Ouvrir mon espace</Link>
               </Button>
             </>
           )}

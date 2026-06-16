@@ -37,7 +37,7 @@ const STRATEGY_LABELS: Record<string, string> = {
 };
 
 export const Route = createFileRoute("/_authenticated/radar")({
-  head: () => ({ meta: [{ title: "Radar d'opportunités — RentIQ" }] }),
+  head: () => ({ meta: [{ title: "Radar de marché — RentIQ" }] }),
   component: RadarPage,
 });
 
@@ -57,7 +57,7 @@ function RadarPage() {
   const scanM = useMutation({
     mutationFn: (profileId: string) => scan({ data: { profileId } }),
     onSuccess: (r: any) => {
-      toast.success(`${r.detected} opportunité(s) détectée(s), ${r.matched} conforme(s)`);
+      toast.success(`${r.detected} opportunité(s) détectée(s), ${r.matched} conforme(s) à votre thèse`);
       opps.refetch();
       profiles.refetch();
     },
@@ -66,7 +66,7 @@ function RadarPage() {
   const delM = useMutation({
     mutationFn: (id: string) => del({ data: { id } }),
     onSuccess: () => {
-      toast.success("Profil supprimé");
+      toast.success("Thèse d'investissement supprimée");
       profiles.refetch();
       opps.refetch();
     },
@@ -82,15 +82,15 @@ function RadarPage() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Radar className="h-6 w-6" />
-            Radar d'opportunités
+            Radar de marché
           </h1>
           <p className="text-sm text-muted-foreground">
-            Définissez vos critères : RentIQ surveille et score les biens pour vous.
+            Détectez en avance les opportunités qui correspondent à votre thèse d'investissement.
           </p>
         </div>
         <Button onClick={() => setShowForm((v) => !v)}>
           <Plus className="mr-1 h-4 w-4" />
-          Nouveau profil
+          Nouvelle thèse d'investissement
         </Button>
       </div>
 

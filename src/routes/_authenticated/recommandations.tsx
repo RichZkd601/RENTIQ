@@ -40,7 +40,7 @@ const CONF: Record<string, string> = {
 };
 
 export const Route = createFileRoute("/_authenticated/recommandations")({
-  head: () => ({ meta: [{ title: "Recommandations — RentIQ" }] }),
+  head: () => ({ meta: [{ title: "Arbitrages recommandés — RentIQ" }] }),
   component: RecommandationsPage,
 });
 
@@ -54,7 +54,7 @@ function RecommandationsPage() {
   const genM = useMutation({
     mutationFn: () => gen({}),
     onSuccess: (r: any) => {
-      toast.success(`${r.generated} recommandation(s) générée(s)`);
+      toast.success(`${r.generated} arbitrage(s) identifié(s)`);
       q.refetch();
     },
     onError: (e: any) => toast.error(e?.message ?? "Génération échouée"),
@@ -75,10 +75,10 @@ function RecommandationsPage() {
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Lightbulb className="h-6 w-6" />
-            Recommandations
+            Arbitrages recommandés
           </h1>
           <p className="text-sm text-muted-foreground">
-            RentIQ analyse votre portefeuille et détecte les leviers d'optimisation.
+            Les décisions qui peuvent faire progresser votre patrimoine cette année.
           </p>
         </div>
         <Button onClick={() => genM.mutate()} disabled={genM.isPending}>
@@ -87,14 +87,14 @@ function RecommandationsPage() {
           ) : (
             <RefreshCw className="mr-1 h-4 w-4" />
           )}
-          Régénérer
+          Réévaluer mon portefeuille
         </Button>
       </div>
 
       {totalGain > 0 && (
         <Card className="border-emerald-300/50 bg-emerald-50/40 dark:bg-emerald-950/10">
           <CardContent className="py-4 text-sm">
-            Potentiel total identifié :{" "}
+            Potentiel patrimonial identifié :{" "}
             <span className="font-mono font-semibold text-emerald-700 dark:text-emerald-400">
               +{Math.round(totalGain)} €/mois
             </span>
@@ -109,16 +109,16 @@ function RecommandationsPage() {
       ) : (q.data?.length ?? 0) === 0 ? (
         <Card className="border-dashed">
           <CardHeader>
-            <CardTitle className="text-base">Aucune recommandation ouverte</CardTitle>
+            <CardTitle className="text-base">Aucun arbitrage en attente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              Ajoutez des biens à votre patrimoine puis lancez une analyse pour révéler les
-              optimisations possibles.
+              Ajoutez des actifs à votre portefeuille puis lancez une évaluation pour faire émerger
+              les arbitrages les plus pertinents.
             </p>
             <Button onClick={() => genM.mutate()} disabled={genM.isPending}>
               <RefreshCw className="mr-1 h-4 w-4" />
-              Lancer l'analyse
+              Évaluer mon portefeuille
             </Button>
           </CardContent>
         </Card>

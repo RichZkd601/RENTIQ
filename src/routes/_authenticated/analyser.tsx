@@ -44,11 +44,13 @@ const FormSchema = z.object({
   airbnbOccupancy: optNum,
   isClasseTourisme: z.boolean().default(false),
   loanAmount: reqNum(0),
-  loanRate: reqNum(0),
+  // Taux saisi en POURCENT (ex. "3.5" = 3,5 %). Converti en décimal au submit.
+  loanRatePct: z.preprocess((v) => (v === "" || v == null ? 0 : Number(v)), z.number().min(0).max(20)),
   loanYears: reqNum(1),
   tmi: z.coerce.number(),
   objective: z.enum(["cashflow", "patrimoine", "equilibre", "defisc"]),
   effort: z.enum(["passif", "modere", "actif"]),
+  exterior: z.enum(["aucun", "balcon", "terrasse", "rez_jardin"]).default("aucun"),
 });
 
 type FormValues = z.input<typeof FormSchema>;
@@ -57,8 +59,8 @@ const DRAFT_KEY = "rentiq:analyse-draft";
 export const Route = createFileRoute("/_authenticated/analyser")({
   head: () => ({
     meta: [
-      { title: "Nouvelle analyse — RentIQ" },
-      { name: "description", content: "Analysez votre projet immobilier : 6 stratégies comparées en 60 secondes." },
+      { title: "Nouvelle opportunité — RentIQ" },
+      { name: "description", content: "Évaluez l'impact d'une opportunité sur votre patrimoine : 6 stratégies comparées en 60 secondes." },
     ],
   }),
   component: AnalyserPage,
@@ -103,11 +105,12 @@ function AnalyserPage() {
       downPayment: 0,
       isClasseTourisme: false,
       loanAmount: 150_000,
-      loanRate: 0.04,
+      loanRatePct: 4,
       loanYears: 25,
       tmi: 0.30,
       objective: "equilibre",
       effort: "modere",
+      exterior: "aucun",
     },
     mode: "onTouched",
   });
@@ -334,9 +337,11 @@ function AnalyserPage() {
   const onSubmit = async (values: FormValues) => {
     setSubmitting(true);
     try {
+      const { loanRatePct, ...rest } = values as any;
       const res = await generate({
         data: {
-          ...values,
+          ...rest,
+          loanRate: Number((Number(loanRatePct ?? 0) / 100).toFixed(4)),
           postalCode: values.postalCode,
           propertyType: values.propertyType ? values.propertyType : undefined,
           monthlyNu: enabledHyp.nu ? (values.monthlyNu || undefined) : undefined,
@@ -369,10 +374,43 @@ function AnalyserPage() {
     }
   };
 
+  const submitAnalysis = handleSubmit(onSubmit, (errors) => {
+    const firstField = Object.keys(errors)[0] as keyof FormValues | undefined;
+    const stepByField: Partial<Record<keyof FormValues, number>> = {
+      postalCode: 1,
+      cityName: 1,
+      propertyType: 1,
+      surfaceM2: 1,
+      rooms: 1,
+      price: 1,
+      worksBudget: 1,
+      furnitureBudget: 1,
+      propertyTax: 1,
+      copro: 1,
+      downPayment: 2,
+      loanAmount: 2,
+      loanRatePct: 2,
+      loanYears: 2,
+      tmi: 2,
+      objective: 3,
+      effort: 3,
+      exterior: 1,
+      monthlyNu: 3,
+      monthlyMeuble: 3,
+      colocRoomRent: 3,
+      colocRoomCount: 3,
+      airbnbNightly: 3,
+      airbnbOccupancy: 3,
+      isClasseTourisme: 3,
+    };
+    if (firstField && stepByField[firstField]) setStep(stepByField[firstField]!);
+    toast.error("Certains champs sont à compléter avant l'évaluation.");
+  });
+
   const next = async () => {
     const fields: Record<number, (keyof FormValues)[]> = {
       1: ["postalCode", "cityName", "surfaceM2", "rooms", "price"],
-      2: ["downPayment", "loanAmount", "loanRate", "loanYears"],
+      2: ["downPayment", "loanAmount", "loanRatePct", "loanYears"],
     };
     const ok = await form.trigger(fields[step] as any);
     if (ok) setStep(step + 1);
@@ -381,8 +419,8 @@ function AnalyserPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Nouvelle analyse</h1>
-        <p className="text-sm text-muted-foreground">Étape {step}/3 — {step === 1 ? "Le bien" : step === 2 ? "Financement" : "Objectif & loyers"}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Nouvelle opportunité</h1>
+        <p className="text-sm text-muted-foreground">Étape {step}/3 — {step === 1 ? "Le bien" : step === 2 ? "Votre financement" : "Stratégies à comparer"}</p>
         <div className="mt-3 flex gap-1">
           {[1, 2, 3].map((s) => (
             <div key={s} className={`h-1 flex-1 rounded-full ${s <= step ? "bg-primary" : "bg-muted"}`} />
@@ -392,9 +430,22 @@ function AnalyserPage() {
 
       <div className="mb-4 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-3 text-xs text-muted-foreground">
         <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-none text-primary" />
-        <span>Les champs sont pré-remplis avec des estimations de marché dès que vous saisissez la ville, la surface et le type. Modifiez librement les valeurs : vos saisies sont prioritaires.</span>
+        <span>RentIQ pré-remplit les champs avec des références de marché dès que vous saisissez la ville, la surface et le type. Vos saisies restent prioritaires sur toute estimation.</span>
       </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        onKeyDown={(e) => {
+          // Entrée ne doit jamais lancer l'analyse : seul le bouton final le fait.
+          if (e.key === "Enter") {
+            const t = e.target as HTMLElement;
+            if (t.tagName === "INPUT") e.preventDefault();
+          }
+        }}
+        className="space-y-6"
+      >
+
+
+
         <div hidden={step !== 1} className={step !== 1 ? "hidden" : undefined}>
           <Card>
             <CardHeader>
@@ -540,8 +591,49 @@ function AnalyserPage() {
               <Field label="Nombre de pièces" error={formState.errors.rooms?.message}>
                 <Input type="number" {...register("rooms")} />
               </Field>
+              <Field label="Extérieur">
+                <Select
+                  value={(watch("exterior") as string) ?? "aucun"}
+                  onValueChange={(v) => setValue("exterior", v as any, { shouldDirty: true })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="aucun">Aucun</SelectItem>
+                    <SelectItem value="balcon">Balcon</SelectItem>
+                    <SelectItem value="terrasse">Terrasse</SelectItem>
+                    <SelectItem value="rez_jardin">Rez-de-jardin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field label="Prix FAI (€) — frais d'agence inclus" error={formState.errors.price?.message}>
                 <Input type="number" {...register("price")} />
+                {(() => {
+                  const pricePerSqm = cityData?.priceSqmAvg ?? (marketSnapshot as any)?.priceSqmAvg ?? null;
+                  const surface = Number(watchedSurface) || 0;
+                  const suggested = pricePerSqm && surface > 0 ? Math.round(pricePerSqm * surface) : null;
+                  if (!suggested) return null;
+                  return (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md border border-primary/20 bg-primary/5 p-2 text-xs">
+                      <Sparkles className="h-3.5 w-3.5 flex-none text-primary" />
+                      <span className="flex-1">
+                        Référence marché : <strong>{Math.round(pricePerSqm!).toLocaleString("fr-FR")} €/m²</strong> × {surface} m² ≈{" "}
+                        <strong>{suggested.toLocaleString("fr-FR")} €</strong>
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-7"
+                        onClick={() => {
+                          setValue("price", suggested as any, { shouldDirty: true });
+                          toast.success("Prix rempli avec la référence marché");
+                        }}
+                      >
+                        Utiliser
+                      </Button>
+                    </div>
+                  );
+                })()}
                 <p className="text-xs text-muted-foreground">
                   Prix affiché par l'agence ou le vendeur, honoraires d'agence inclus. Les frais de notaire sont estimés séparément dans le calcul.
                 </p>
@@ -578,8 +670,9 @@ function AnalyserPage() {
                   Capital financé par la banque. Par défaut : prix FAI moins apport, mais vous pouvez l'ajuster si la banque finance aussi les frais ou travaux.
                 </p>
               </Field>
-              <Field label="Taux annuel (ex 0.04 = 4%)">
-                <Input type="number" step="0.001" {...register("loanRate")} />
+              <Field label="Taux annuel (%)" error={formState.errors.loanRatePct?.message as string}>
+                <Input type="number" step="0.05" placeholder="ex. 3.5" {...register("loanRatePct")} />
+                <p className="text-xs text-muted-foreground">Taux hors assurance, exprimé en pourcentage (ex. 3,5 pour 3,5 %).</p>
               </Field>
               <Field label="Durée (années)">
                 <Input type="number" {...register("loanYears")} />
@@ -729,8 +822,8 @@ function AnalyserPage() {
               Suivant <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="submit" disabled={submitting}>
-              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyse en cours…</> : "Lancer l'analyse"}
+            <Button type="button" disabled={submitting} onClick={() => submitAnalysis()}>
+              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Votre copilote arbitre les stratégies…</> : "Évaluer cette opportunité"}
             </Button>
           )}
         </div>

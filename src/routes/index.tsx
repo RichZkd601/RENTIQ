@@ -21,17 +21,17 @@ import logoUrl from "@/assets/rentiq-logo.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "RentIQ — L'intelligence immobilière. Rentabilité réelle en 60 secondes" },
+      { title: "RentIQ — Le copilote patrimonial de l'investisseur immobilier" },
       {
         name: "description",
         content:
-          "RentIQ analyse en 60 secondes la rentabilité réelle et les risques réglementaires de votre bien. Calculs fiables, réglementation à jour, IA d'expertise.",
+          "RentIQ accompagne les investisseurs avant, pendant et après l'achat : évaluez vos opportunités, pilotez votre portefeuille et anticipez vos arbitrages.",
       },
-      { property: "og:title", content: "RentIQ — L'intelligence immobilière" },
+      { property: "og:title", content: "RentIQ — Le copilote patrimonial de l'investisseur" },
       {
         property: "og:description",
         content:
-          "Achetez mieux. Investissez serein. 6 stratégies comparées, fiscalité 2026, réglementation locale.",
+          "Évaluez une opportunité, construisez votre patrimoine, décidez avec conviction. La rigueur d'un investisseur professionnel, augmentée par l'IA.",
       },
     ],
   }),
@@ -50,24 +50,24 @@ function Landing() {
             <div className="flex min-w-0 flex-col justify-center">
               <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary shadow-card sm:text-[11px]">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                L'intelligence immobilière
+                Le copilote patrimonial de l'investisseur
               </div>
 
               <h1 className="text-[34px] font-bold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-[52px] lg:text-[56px]">
-                Achetez mieux.<br />
-                <span className="text-primary">Investissez serein.</span>
+                Investissez avec méthode.<br />
+                <span className="text-primary">Décidez avec conviction.</span>
               </h1>
 
               <p className="mt-5 max-w-xl text-[15px] leading-[1.55] text-muted-foreground sm:mt-6 sm:text-[17px] sm:leading-[1.6]">
-                RentIQ analyse en 60 secondes la rentabilité réelle et les risques
-                réglementaires de votre bien. Des chiffres clairs pour décider sereinement.
+                RentIQ vous accompagne avant, pendant et après l'achat : évaluez vos opportunités,
+                pilotez votre portefeuille et anticipez vos arbitrages — avec la rigueur d'un investisseur professionnel.
               </p>
 
               <ul className="mt-7 space-y-2.5 sm:mt-8 sm:space-y-3">
                 {[
                   { icon: Scale, label: "Réglementation à jour — Loi Le Meur, fiscalité 2026" },
-                  { icon: TrendingUp, label: "Calculs fiables et transparents, sourcés" },
-                  { icon: Sparkles, label: "IA d'expertise — elle arbitre, elle n'invente pas" },
+                  { icon: TrendingUp, label: "Moteur de calcul déterministe, audité et défendable" },
+                  { icon: Sparkles, label: "Un copilote IA qui arbitre — il n'invente pas" },
                 ].map((f) => (
                   <li key={f.label} className="flex items-start gap-3 text-[14px] leading-snug text-foreground sm:text-[15px]">
                     <span className="mt-0.5 grid h-5 w-5 flex-none place-items-center rounded-full bg-info-soft text-primary">
@@ -81,12 +81,12 @@ function Landing() {
               <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center">
                 <Button size="lg" className="h-12 w-full rounded-xl px-6 text-[15px] font-semibold shadow-card sm:w-auto" asChild>
                   <Link to="/auth">
-                    Analyser un bien maintenant
+                    Évaluer une opportunité
                     <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Link>
                 </Button>
                 <span className="text-center text-xs text-muted-foreground sm:text-left">
-                  3 analyses gratuites · Sans carte bancaire
+                  3 évaluations offertes · Sans carte bancaire
                 </span>
               </div>
 
@@ -152,27 +152,27 @@ function Landing() {
                 Pourquoi RentIQ
               </div>
               <h2 className="text-[26px] font-bold tracking-[-0.02em] text-foreground sm:text-[34px]">
-                Le seul outil qui ose dire :{" "}
+                Le copilote qui ose vous dire :{" "}
                 <span className="text-muted-foreground">
-                  « votre Airbnb serait meilleur en colocation ».
+                  « cette opportunité ne fait pas progresser votre patrimoine ».
                 </span>
               </h2>
             </div>
             <div className="mt-10 grid gap-4 sm:mt-12 sm:gap-5 md:grid-cols-3">
               <FeatureCard
                 icon={Scale}
-                title="6 stratégies comparées"
-                body="Location nue, LMNP, bail mobilité, Airbnb, colocation, achat-revente. Chiffrées, classées, expliquées."
+                title="Évaluation d'opportunité 360°"
+                body="6 stratégies chiffrées, classées et comparées : location nue, LMNP, bail mobilité, Airbnb, colocation, achat-revente."
               />
               <FeatureCard
                 icon={ShieldCheck}
-                title="Réglementation à jour"
-                body="Pour chaque ville, le niveau réglementaire est vérifié et daté. Une stratégie bloquée par la mairie est écartée."
+                title="Pilotage de portefeuille"
+                body="Valeur patrimoniale, encours de crédit, cashflow net, rendement pondéré — la vue consolidée d'un gérant d'actifs."
               />
               <FeatureCard
                 icon={TrendingUp}
-                title="Chiffres déterministes"
-                body="Aucun calcul par l'IA. Moteur testable, sourcé, conforme à la fiscalité 2026. L'IA arbitre, elle n'invente rien."
+                title="Moteur déterministe, défendable"
+                body="Aucun chiffre inventé par l'IA. Un moteur testable, conforme à la fiscalité 2026 — des projections que vous pouvez présenter à votre banquier."
               />
             </div>
           </div>
@@ -182,15 +182,15 @@ function Landing() {
         <section className="border-t bg-card">
           <div className="mx-auto max-w-6xl px-4 py-14 text-center sm:px-6 sm:py-20">
             <h2 className="text-[26px] font-bold tracking-[-0.02em] text-foreground sm:text-[34px]">
-              Analysez avant d'acheter.
+              Construisez votre patrimoine avec méthode.
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[14px] text-muted-foreground sm:text-[15px]">
-              3 analyses gratuites par mois. Aucune carte requise. Idéal pour
-              valider un projet ou présenter un dossier solide à votre banquier.
+              3 évaluations offertes par mois. Aucune carte requise. L'outil de référence pour
+              valider une opportunité et structurer un dossier crédible.
             </p>
             <Button size="lg" className="mt-7 h-12 w-full rounded-xl px-6 text-[15px] font-semibold shadow-card sm:mt-8 sm:w-auto" asChild>
               <Link to="/auth">
-                Créer mon compte gratuit
+                Ouvrir mon espace investisseur
                 <ArrowRight className="ml-1.5 h-4 w-4" />
               </Link>
             </Button>

@@ -104,6 +104,13 @@ function AnalysePage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 space-y-8">
+      {/* Actions rapides (haut) */}
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={() => editForm()}>
+          <Pencil className="mr-1 h-4 w-4" />Modifier le formulaire
+        </Button>
+      </div>
+
       {/* Bandeau réglementaire */}
       {banner && (
         <Alert variant={banner.level === "danger" ? "destructive" : "default"}>
@@ -420,7 +427,7 @@ function AnalysePage() {
           <Link to="/historique">Voir l'historique</Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link to="/analyser">Nouvelle analyse</Link>
+          <Link to="/analyser">Évaluer une autre opportunité</Link>
         </Button>
       </div>
     </div>

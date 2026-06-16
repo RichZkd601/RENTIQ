@@ -45,11 +45,12 @@ const AnalysisInput = z.object({
   flipEnabled: z.boolean().default(false),
   estimatedResalePrice: z.number().min(0).max(20_000_000).optional(),
   holdingMonths: z.number().int().min(1).max(60).optional(),
+  exterior: z.enum(["aucun", "balcon", "terrasse", "rez_jardin"]).optional(),
 });
 
 export type AnalysisInputT = z.infer<typeof AnalysisInput>;
 
-const PLAN_QUOTAS: Record<string, number> = { free: 3, pro: 50, business: 9999, premium: 9999 };
+const PLAN_QUOTAS: Record<string, number> = { free: 3, pro: 50, business: 9999, premium: 9999, lifetime: 999999 };
 
 // ---------------- generateAnalysis ----------------
 export const generateAnalysis = createServerFn({ method: "POST" })
@@ -198,6 +199,7 @@ export const generateAnalysis = createServerFn({ method: "POST" })
         user_profile: data.objective,
         holding_months: data.holdingMonths ?? null,
         estimated_resale_price: data.estimatedResalePrice ?? null,
+        exterior: data.exterior ?? null,
         calc: { matched, flip, city, input: data, verdict } as any,
         ai_analysis: aiAnalysis as any,
       })

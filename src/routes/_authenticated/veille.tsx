@@ -33,11 +33,10 @@ function VeillePage() {
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <ShieldAlert className="h-6 w-6" />
-          Veille réglementaire
+          Veille réglementaire et fiscale
         </h1>
         <p className="text-sm text-muted-foreground">
-          Les évolutions qui touchent vos villes et vos stratégies — pour ne jamais être pris au
-          dépourvu.
+          Restez en avance sur les évolutions qui impactent votre patrimoine et vos stratégies.
         </p>
       </div>
 
@@ -48,11 +47,11 @@ function VeillePage() {
       ) : (q.data?.length ?? 0) === 0 ? (
         <Card className="border-dashed">
           <CardHeader>
-            <CardTitle className="text-base">Rien à signaler</CardTitle>
+            <CardTitle className="text-base">Aucune évolution à signaler</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Aucune alerte réglementaire sur vos villes. Ajoutez des biens ou des profils radar pour
-            cibler la veille.
+            Aucune évolution réglementaire détectée sur vos villes. Ajoutez des actifs ou des thèses
+            d'investissement pour cibler la veille.
           </CardContent>
         </Card>
       ) : (

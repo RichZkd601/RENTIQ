@@ -130,8 +130,9 @@ const PropertyInput = z.object({
   propertyType: z.enum(["studio", "t2", "t3", "t4_plus", "maison"]).optional(),
   surfaceM2: z.number().min(8).max(2000),
   rooms: z.number().int().min(1).max(20),
-  strategy: STRATEGY,
-  status: z.enum(["owned", "prospect", "sold"]).default("owned"),
+  strategy: STRATEGY.optional(),
+  status: z.enum(["owned", "prospect", "sold", "primary_residence"]).default("owned"),
+  exterior: z.enum(["aucun", "balcon", "terrasse", "rez_jardin"]).optional(),
   purchasePrice: z.number().min(10_000).max(20_000_000),
   purchaseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   worksBudget: z.number().min(0).max(2_000_000).default(0),
@@ -164,6 +165,10 @@ const PropertyInput = z.object({
 type PropertyInputT = z.infer<typeof PropertyInput>;
 
 function buildEconomics(d: PropertyInputT) {
+  // Résidence principale : pas de loyer, pas de cashflow locatif.
+  if (d.status === "primary_residence" || !d.strategy) {
+    return { monthlyRentGross: 0, monthlyCashflowNet: 0, netYieldPct: null as number | null };
+  }
   return computeEconomics({
     strategy: d.strategy,
     price: d.purchasePrice,
@@ -206,8 +211,9 @@ export const createProperty = createServerFn({ method: "POST" })
         property_type: data.propertyType ?? null,
         surface_sqm: data.surfaceM2,
         rooms: data.rooms,
-        strategy: data.strategy,
+        strategy: data.strategy ?? null,
         status: data.status,
+        exterior: data.exterior ?? null,
         purchase_price: data.purchasePrice,
         purchase_date: data.purchaseDate,
         works_budget: data.worksBudget,
@@ -273,8 +279,9 @@ export const updateProperty = createServerFn({ method: "POST" })
         property_type: data.propertyType ?? null,
         surface_sqm: data.surfaceM2,
         rooms: data.rooms,
-        strategy: data.strategy,
+        strategy: data.strategy ?? null,
         status: data.status,
+        exterior: data.exterior ?? null,
         purchase_price: data.purchasePrice,
         purchase_date: data.purchaseDate,
         works_budget: data.worksBudget,
@@ -434,7 +441,21 @@ export const getPortfolioOverview = createServerFn({ method: "GET" })
 
     const summary = portfolioSummary(properties);
     const ranking = rankProperties(properties);
-    const timeline = netWorthTimeline(withVals, { months: 12 });
+    // Timeline depuis l'achat du bien le plus ancien (min 6 mois, max 240).
+    const ownedForTimeline = properties.filter((p) => (p.status ?? "owned") !== "prospect");
+    const now = new Date();
+    let monthsSpan = 12;
+    if (ownedForTimeline.length > 0) {
+      const earliest = ownedForTimeline
+        .map((p) => new Date(p.purchaseDate))
+        .reduce((a, b) => (a < b ? a : b));
+      const diff =
+        (now.getFullYear() - earliest.getFullYear()) * 12 +
+        (now.getMonth() - earliest.getMonth()) +
+        1;
+      monthsSpan = Math.max(6, Math.min(240, diff));
+    }
+    const timeline = netWorthTimeline(withVals, { months: monthsSpan });
     const labelById = new Map(properties.map((p) => [p.id, p.label]));
 
     return {

@@ -68,20 +68,20 @@ function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Cockpit patrimonial</h1>
           <p className="text-sm text-muted-foreground">
-            Votre copilote immobilier, en un coup d'œil.
+            Votre patrimoine en un coup d'œil. Vos prochaines décisions, priorisées.
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link to="/analyser">
               <Sparkles className="mr-1 h-4 w-4" />
-              Analyser un bien
+              Évaluer une opportunité
             </Link>
           </Button>
           <Button asChild>
             <Link to="/patrimoine/nouveau">
               <Plus className="mr-1 h-4 w-4" />
-              Ajouter un bien
+              Ajouter un actif
             </Link>
           </Button>
         </div>
@@ -92,24 +92,24 @@ function DashboardPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-5 w-5" />
-              Construisez votre patrimoine
+              Construisez votre portefeuille
             </CardTitle>
             <CardDescription>
-              Ajoutez vos biens pour activer le cockpit : valeur nette, cashflow, recommandations
-              mensuelles et conseiller IA.
+              Ajoutez vos premiers actifs pour activer le cockpit : valeur patrimoniale, cashflow net,
+              arbitrages recommandés et copilote IA.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Button asChild>
               <Link to="/patrimoine/nouveau">
                 <Plus className="mr-1 h-4 w-4" />
-                Ajouter mon premier bien
+                Ajouter mon premier actif
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/radar">
                 <Radar className="mr-1 h-4 w-4" />
-                Configurer mon radar
+                Configurer mon radar de marché
               </Link>
             </Button>
           </CardContent>
@@ -120,26 +120,26 @@ function DashboardPage() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Kpi
               icon={<Building2 className="h-4 w-4" />}
-              label="Patrimoine"
+              label="Valeur patrimoniale"
               value={eur(s!.totalValue)}
-              sub={`${ov.data!.propertyCount} bien(s)`}
+              sub={`${ov.data!.propertyCount} actif(s)`}
             />
             <Kpi
               icon={<TrendingUp className="h-4 w-4" />}
               label="Valeur nette"
               value={eur(s!.netWorth)}
-              sub={`dette ${eur(s!.totalDebt)}`}
+              sub={`encours de crédit ${eur(s!.totalDebt)}`}
             />
             <Kpi
               icon={<Wallet className="h-4 w-4" />}
-              label="Cashflow / mois"
+              label="Cashflow net mensuel"
               value={`${s!.monthlyCashflow >= 0 ? "+" : ""}${s!.monthlyCashflow} €`}
               sub={`${eur(s!.annualCashflow)} / an`}
               tone={s!.monthlyCashflow >= 0 ? "pos" : "neg"}
             />
             <Kpi
               icon={<TrendingUp className="h-4 w-4" />}
-              label="Rendement brut moy."
+              label="Rendement brut pondéré"
               value={`${s!.avgGrossYieldPct}%`}
               sub={`LTV ${s!.avgLtvPct}%`}
             />
@@ -149,7 +149,7 @@ function DashboardPage() {
           <div className="grid gap-4 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Valeur nette — 12 mois</CardTitle>
+                <CardTitle className="text-base">Valeur nette — depuis l'achat</CardTitle>
                 <CardDescription>Patrimoine net (valeur − dette restante)</CardDescription>
               </CardHeader>
               <CardContent className="h-56">
@@ -164,7 +164,10 @@ function DashboardPage() {
                     <XAxis
                       dataKey="month"
                       tick={{ fontSize: 11 }}
-                      tickFormatter={(m: string) => m.slice(5)}
+                      tickFormatter={(m: string) =>
+                        ov.data!.timeline.length > 24 ? m.slice(2, 7) : m.slice(5)
+                      }
+                      minTickGap={20}
                     />
                     <YAxis
                       tick={{ fontSize: 11 }}
@@ -191,7 +194,7 @@ function DashboardPage() {
               {ov.data!.best && (
                 <MiniProperty
                   tone="pos"
-                  title="Meilleur bien"
+                  title="Meilleur actif"
                   label={(ov.data!.best as any).label}
                   yieldPct={ov.data!.best.grossYieldPct}
                   cashflow={ov.data!.best.monthlyCashflow}
@@ -200,7 +203,7 @@ function DashboardPage() {
               {ov.data!.worst && (
                 <MiniProperty
                   tone="neg"
-                  title="À surveiller"
+                  title="Actif à surveiller"
                   label={(ov.data!.worst as any).label}
                   yieldPct={ov.data!.worst.grossYieldPct}
                   cashflow={ov.data!.worst.monthlyCashflow}
@@ -221,11 +224,11 @@ function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <TeaserCard
           icon={<Lightbulb className="h-4 w-4" />}
-          title="Recommandations"
+          title="Arbitrages recommandés"
           to="/recommandations"
           count={rq.data?.length ?? 0}
           loading={rq.isLoading}
-          emptyLabel="Aucune recommandation ouverte"
+          emptyLabel="Aucun arbitrage en attente sur votre portefeuille"
           render={(rq.data ?? []).slice(0, 3).map((r: any) => (
             <li key={r.id} className="flex items-start justify-between gap-2 text-sm">
               <span className="min-w-0 truncate">{r.title}</span>
@@ -243,7 +246,7 @@ function DashboardPage() {
           to="/veille"
           count={aq.data?.length ?? 0}
           loading={aq.isLoading}
-          emptyLabel="Rien de nouveau sur vos villes"
+          emptyLabel="Aucune évolution réglementaire détectée sur vos villes"
           render={(aq.data ?? []).slice(0, 3).map((a: any) => (
             <li key={a.id} className="flex items-start gap-2 text-sm">
               <Badge
@@ -271,7 +274,7 @@ function DashboardPage() {
             {nq.isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             ) : (nq.data?.items.length ?? 0) === 0 ? (
-              <p className="text-sm text-muted-foreground">Vos alertes apparaîtront ici.</p>
+              <p className="text-sm text-muted-foreground">Vos alertes patrimoniales apparaîtront ici.</p>
             ) : (
               <ul className="space-y-2">
                 {nq.data!.items.slice(0, 4).map((n: any) => (
@@ -293,16 +296,16 @@ function DashboardPage() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <Sparkles className="h-4 w-4" />
-              Conseiller patrimonial IA
+              Copilote patrimonial IA
             </CardTitle>
-            <CardDescription>Posez une question sur votre patrimoine réel.</CardDescription>
+            <CardDescription>Un copilote entraîné sur votre patrimoine, vos opportunités et le marché.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex flex-wrap gap-2 text-xs">
               {[
-                "Puis-je acheter un bien de plus ?",
-                "Mon cashflow dans 5 ans ?",
-                "Quel bien optimiser ?",
+                "Puis-je financer un actif supplémentaire ?",
+                "Quel cashflow dans 5 ans ?",
+                "Quel arbitrage prioriser ?",
               ].map((q) => (
                 <span
                   key={q}
@@ -314,7 +317,7 @@ function DashboardPage() {
             </div>
             <Button size="sm" asChild className="mt-2">
               <Link to="/assistant">
-                Ouvrir le conseiller
+                Consulter mon copilote
                 <ArrowRight className="ml-1 h-3 w-3" />
               </Link>
             </Button>

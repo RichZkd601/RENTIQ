@@ -22,8 +22,8 @@ const STRATEGY_LABELS: Record<string, string> = {
 export const Route = createFileRoute("/_authenticated/historique")({
   head: () => ({
     meta: [
-      { title: "Historique — RentIQ" },
-      { name: "description", content: "Vos analyses d'investissement immobilier sauvegardées." },
+      { title: "Journal de décisions — RentIQ" },
+      { name: "description", content: "Retrouvez chaque opportunité évaluée et la décision que vous avez prise." },
     ],
   }),
   component: HistoriquePage,
@@ -42,7 +42,7 @@ function HistoriquePage() {
   const del = useMutation({
     mutationFn: (id: string) => remove({ data: { id } }),
     onSuccess: () => {
-      toast.success("Analyse supprimée");
+      toast.success("Opportunité retirée du journal");
       list.refetch();
       quota.refetch();
     },
@@ -54,8 +54,8 @@ function HistoriquePage() {
     <div className="mx-auto max-w-5xl px-4 py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Vos analyses</h1>
-          <p className="text-sm text-muted-foreground">Retrouvez et comparez tous vos projets analysés.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Journal de décisions</h1>
+          <p className="text-sm text-muted-foreground">Retrouvez chaque opportunité évaluée et la décision que vous avez prise.</p>
         </div>
         <div className="flex items-center gap-3">
           {quota.data && (
@@ -64,7 +64,7 @@ function HistoriquePage() {
             </Badge>
           )}
           <Button asChild>
-            <Link to="/analyser"><Plus className="mr-1 h-4 w-4" />Nouvelle analyse</Link>
+            <Link to="/analyser"><Plus className="mr-1 h-4 w-4" />Évaluer une opportunité</Link>
           </Button>
         </div>
       </div>
@@ -74,9 +74,9 @@ function HistoriquePage() {
           <CardContent className="flex items-center justify-between gap-4 py-4">
             <div className="flex items-center gap-3 text-sm">
               <AlertCircle className="h-4 w-4 text-amber-600" />
-              Quota mensuel atteint. Passez à un plan supérieur pour continuer.
+              Vous avez atteint votre quota d'évaluations ce mois-ci. Étendez votre accompagnement pour poursuivre vos décisions sans interruption.
             </div>
-            <Button size="sm" asChild><Link to="/upgrade">Mettre à niveau</Link></Button>
+            <Button size="sm" asChild><Link to="/upgrade">Activer mon accompagnement</Link></Button>
           </CardContent>
         </Card>
       )}
@@ -85,9 +85,9 @@ function HistoriquePage() {
         <div className="flex justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
       ) : !list.data || list.data.length === 0 ? (
         <Card>
-          <CardHeader><CardTitle>Aucune analyse pour l'instant</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Votre journal est encore vierge</CardTitle></CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Lancez votre première analyse en quelques secondes.
+            Évaluez votre première opportunité pour commencer votre journal de décisions.
           </CardContent>
         </Card>
       ) : (
