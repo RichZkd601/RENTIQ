@@ -44,10 +44,37 @@ export function isFirecrawlConfigured(): boolean {
 
 /** Codes HTTP transitoires : on retente (quota, surcharge, passerelle). */
 const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
-const MAX_ATTEMPTS = 3;
-const REQUEST_TIMEOUT_MS = 60_000;
+const PROXY_MODES = new Set(["basic", "stealth", "auto"]);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function clampNum(raw: string | undefined, def: number, min: number, max: number): number {
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
+}
+
+/**
+ * Réglages Firecrawl pilotables par variables d'environnement (lus à chaque
+ * appel : ajustables sans redéployer le code). Valeurs bornées + validées.
+ *
+ *  FIRECRAWL_PROXY        basic | stealth | auto   (défaut auto)
+ *  FIRECRAWL_WAIT_MS      0 – 15000                (défaut 2500)
+ *  FIRECRAWL_TIMEOUT_MS   10000 – 120000           (défaut 60000)
+ *  FIRECRAWL_MAX_ATTEMPTS 1 – 5                     (défaut 3)
+ *  FIRECRAWL_COUNTRY      code pays ISO            (défaut FR)
+ *  FIRECRAWL_ONLY_MAIN    "false" pour désactiver  (défaut true)
+ */
+export function firecrawlConfig() {
+  const proxy = (process.env.FIRECRAWL_PROXY ?? "auto").toLowerCase();
+  return {
+    proxy: PROXY_MODES.has(proxy) ? proxy : "auto",
+    waitMs: clampNum(process.env.FIRECRAWL_WAIT_MS, 2500, 0, 15_000),
+    timeoutMs: clampNum(process.env.FIRECRAWL_TIMEOUT_MS, 60_000, 10_000, 120_000),
+    maxAttempts: Math.floor(clampNum(process.env.FIRECRAWL_MAX_ATTEMPTS, 3, 1, 5)),
+    country: (process.env.FIRECRAWL_COUNTRY ?? "FR").toUpperCase(),
+    onlyMainContent: (process.env.FIRECRAWL_ONLY_MAIN ?? "true").toLowerCase() !== "false",
+  };
+}
 
 function isNetworkError(e: any): boolean {
   return (
@@ -68,23 +95,24 @@ async function scrapeJson(url: string, schema: unknown, prompt: string): Promise
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new FirecrawlNotConfiguredError();
 
+  const cfg = firecrawlConfig();
   const payload = JSON.stringify({
     url,
-    onlyMainContent: true,
+    onlyMainContent: cfg.onlyMainContent,
     // Les portails (LeBonCoin/SeLoger/Bien'ici) sont des SPA protégées :
-    waitFor: 2500, // laisse le JS charger le prix/surface
+    waitFor: cfg.waitMs, // laisse le JS charger le prix/surface
     blockAds: true,
     removeBase64Images: true,
-    location: { country: "FR", languages: ["fr-FR"] },
-    proxy: "auto", // Firecrawl escalade en stealth sur les sites anti-bot
+    location: { country: cfg.country, languages: [`${cfg.country.toLowerCase()}-${cfg.country}`] },
+    proxy: cfg.proxy, // Firecrawl escalade en stealth sur les sites anti-bot
     formats: ["json"],
     jsonOptions: { schema, prompt },
   });
 
   let lastError: unknown;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+  for (let attempt = 1; attempt <= cfg.maxAttempts; attempt++) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    const timeout = setTimeout(() => controller.abort(), cfg.timeoutMs);
     try {
       const res = await fetch(FIRECRAWL_SCRAPE_URL, {
         method: "POST",
@@ -95,7 +123,7 @@ async function scrapeJson(url: string, schema: unknown, prompt: string): Promise
 
       if (!res.ok) {
         const body = await res.text().catch(() => "");
-        if (RETRYABLE_STATUS.has(res.status) && attempt < MAX_ATTEMPTS) {
+        if (RETRYABLE_STATUS.has(res.status) && attempt < cfg.maxAttempts) {
           lastError = new Error(`Firecrawl HTTP ${res.status}`);
           await sleep(400 * 2 ** (attempt - 1));
           continue;
@@ -110,7 +138,7 @@ async function scrapeJson(url: string, schema: unknown, prompt: string): Promise
       return json?.data?.json ?? json?.data?.extract ?? json?.data?.llm_extraction ?? json?.data ?? {};
     } catch (e: any) {
       if (e instanceof FirecrawlNotConfiguredError) throw e;
-      if (isNetworkError(e) && attempt < MAX_ATTEMPTS) {
+      if (isNetworkError(e) && attempt < cfg.maxAttempts) {
         lastError = e;
         await sleep(400 * 2 ** (attempt - 1));
         continue;

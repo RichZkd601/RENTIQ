@@ -71,6 +71,18 @@ Variables d'environnement : voir `.env` (`SUPABASE_URL`,
 - `FIRECRAWL_API_KEY` — active l'import réel d'annonces dans le radar ; sans
   elle, le radar utilise des candidates de démonstration.
 
+Réglages Firecrawl ajustables sans redéployer (lus à chaque appel, valeurs
+bornées) :
+
+| Variable | Défaut | Plage | Rôle |
+| --- | --- | --- | --- |
+| `FIRECRAWL_PROXY` | `auto` | `basic`/`stealth`/`auto` | Mode proxy anti-bot (stealth = + fiable, + coûteux) |
+| `FIRECRAWL_WAIT_MS` | `2500` | 0–15000 | Attente du rendu JS avant extraction |
+| `FIRECRAWL_TIMEOUT_MS` | `60000` | 10000–120000 | Délai max d'une requête |
+| `FIRECRAWL_MAX_ATTEMPTS` | `3` | 1–5 | Tentatives (retry sur 429/5xx/réseau) |
+| `FIRECRAWL_COUNTRY` | `FR` | code ISO | Géolocalisation de la requête |
+| `FIRECRAWL_ONLY_MAIN` | `true` | `true`/`false` | Limiter au contenu principal |
+
 ## Migrations
 
 ```

@@ -9,6 +9,12 @@ describe("firecrawl.server (contrat HTTP, fetch mocké)", () => {
   });
   afterEach(() => {
     delete process.env.FIRECRAWL_API_KEY;
+    delete process.env.FIRECRAWL_PROXY;
+    delete process.env.FIRECRAWL_WAIT_MS;
+    delete process.env.FIRECRAWL_MAX_ATTEMPTS;
+    delete process.env.FIRECRAWL_TIMEOUT_MS;
+    delete process.env.FIRECRAWL_COUNTRY;
+    delete process.env.FIRECRAWL_ONLY_MAIN;
     vi.restoreAllMocks();
   });
 
@@ -132,5 +138,34 @@ describe("firecrawl.server (contrat HTTP, fetch mocké)", () => {
     const mod = await import("./firecrawl.server");
     const raw = await mod.scrapeListing("https://x.fr/a");
     expect(raw.price).toBe("120000");
+  });
+
+  it("respecte les réglages d'environnement (proxy, waitFor, maxAttempts)", async () => {
+    process.env.FIRECRAWL_PROXY = "stealth";
+    process.env.FIRECRAWL_WAIT_MS = "5000";
+    process.env.FIRECRAWL_MAX_ATTEMPTS = "1"; // désactive les retries
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 503, text: async () => "down" });
+    vi.stubGlobal("fetch", fetchMock);
+    const mod = await import("./firecrawl.server");
+    await expect(mod.scrapeListing("https://x.fr/a")).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(1); // maxAttempts=1 → pas de nouvelle tentative
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.proxy).toBe("stealth");
+    expect(body.waitFor).toBe(5000);
+  });
+
+  it("borne une valeur d'environnement aberrante (proxy invalide → auto)", async () => {
+    process.env.FIRECRAWL_PROXY = "n_importe_quoi";
+    process.env.FIRECRAWL_WAIT_MS = "999999"; // au-dessus du max → borné
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, data: { json: { price: "1" } } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const mod = await import("./firecrawl.server");
+    await mod.scrapeListing("https://x.fr/a");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.proxy).toBe("auto"); // valeur invalide rejetée
+    expect(body.waitFor).toBeLessThanOrEqual(15000); // bornée
   });
 });
