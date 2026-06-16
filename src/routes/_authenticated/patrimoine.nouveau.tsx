@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -161,6 +161,15 @@ function NouveauBienPage() {
   const suggestedValue =
     pricePerSqm && watchedSurface > 0 ? Math.round(pricePerSqm * watchedSurface) : null;
 
+  // La valeur actuelle s'estime seule (CP × prix au m² × surface) tant que
+  // l'utilisateur ne l'a pas saisie/modifiée manuellement.
+  const currentValueTouched = useRef(false);
+  useEffect(() => {
+    if (suggestedValue && !currentValueTouched.current) {
+      setValue("currentValue", String(suggestedValue) as any, { shouldValidate: true });
+    }
+  }, [suggestedValue, setValue]);
+
   useEffect(() => {
     if (!fromAnalysis) return;
     prefill({ data: { analysisId: fromAnalysis } })
@@ -189,6 +198,7 @@ function NouveauBienPage() {
           airbnbOccupancy: d.airbnbOccupancy ?? "",
         };
         for (const [k, v] of Object.entries(map)) setValue(k as any, v);
+        currentValueTouched.current = true; // valeur issue de l'analyse : ne pas écraser
         toast.success("Pré-rempli depuis votre analyse");
       })
       .catch(() => toast.error("Analyse introuvable"));
@@ -297,9 +307,25 @@ function NouveauBienPage() {
             <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/20 bg-primary/5 p-2.5 text-xs">
               <Sparkles className="h-3.5 w-3.5 flex-none text-primary" />
               <span className="flex-1">
-                Estimation marché à <strong>{watchedCity || "cette localisation"}</strong> :{" "}
+                Valeur actuelle estimée à <strong>{watchedCity || "cette localisation"}</strong> :{" "}
                 <strong>{Math.round(pricePerSqm).toLocaleString("fr-FR")} €/m²</strong> × {watchedSurface} m² ≈{" "}
                 <strong>{suggestedValue!.toLocaleString("fr-FR")} €</strong>
+                {currentValueTouched.current && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      className="underline underline-offset-2 hover:text-primary"
+                      onClick={() => {
+                        currentValueTouched.current = false;
+                        setValue("currentValue", String(suggestedValue) as any, { shouldValidate: true });
+                        toast.success("Valeur actuelle ré-estimée");
+                      }}
+                    >
+                      ré-estimer
+                    </button>
+                  </>
+                )}
               </span>
               <Button
                 type="button"
@@ -308,11 +334,10 @@ function NouveauBienPage() {
                 className="h-7"
                 onClick={() => {
                   setValue("purchasePrice", String(suggestedValue) as any, { shouldDirty: true });
-                  setValue("currentValue", String(suggestedValue) as any, { shouldDirty: true });
-                  toast.success("Prix et valeur actuels remplis avec la suggestion");
+                  toast.success("Prix d'achat rempli avec l'estimation marché");
                 }}
               >
-                Utiliser
+                Utiliser comme prix d'achat
               </Button>
             </div>
           )}
@@ -325,8 +350,28 @@ function NouveauBienPage() {
             </Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Valeur actuelle (€)" error={errors.currentValue?.message as string}>
-              <Input type="number" {...register("currentValue")} />
+            <Field
+              label="Valeur actuelle (€)"
+              error={errors.currentValue?.message as string}
+              hint={
+                suggestedValue && !currentValueTouched.current
+                  ? "Estimée automatiquement depuis le prix au m² — modifiable"
+                  : undefined
+              }
+            >
+              {(() => {
+                const cv = register("currentValue");
+                return (
+                  <Input
+                    type="number"
+                    {...cv}
+                    onChange={(e) => {
+                      currentValueTouched.current = true;
+                      cv.onChange(e);
+                    }}
+                  />
+                );
+              })()}
             </Field>
             {!isRP && (
               <Field label="Stratégie">
@@ -471,17 +516,23 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({
   label,
   error,
+  hint,
   children,
 }: {
   label: string;
   error?: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-xs">{label}</Label>
       {children}
-      {error && <p className="text-xs text-rose-600">{error}</p>}
+      {error ? (
+        <p className="text-xs text-rose-600">{error}</p>
+      ) : (
+        hint && <p className="text-[11px] text-muted-foreground">{hint}</p>
+      )}
     </div>
   );
 }
