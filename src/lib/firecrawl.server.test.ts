@@ -83,4 +83,54 @@ describe("firecrawl.server (contrat HTTP, fetch mocké)", () => {
     expect(out).toHaveLength(15);
     expect(out[0].price).toBe("100000");
   });
+
+  it("envoie des options de fiabilité adaptées aux portails FR", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, data: { json: { price: "1" } } }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const mod = await import("./firecrawl.server");
+    await mod.scrapeListing("https://www.leboncoin.fr/x/1.htm");
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+    expect(body.proxy).toBe("auto");
+    expect(body.location.country).toBe("FR");
+    expect(body.waitFor).toBeGreaterThan(0);
+  });
+
+  it("retente sur une erreur transitoire (429) puis réussit", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 429, text: async () => "rate limited" })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true, data: { json: { price: "100000" } } }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+    const mod = await import("./firecrawl.server");
+    const raw = await mod.scrapeListing("https://x.fr/a");
+    expect(raw.price).toBe("100000");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("abandonne après 3 tentatives sur 5xx persistant", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 503, text: async () => "down" });
+    vi.stubGlobal("fetch", fetchMock);
+    const mod = await import("./firecrawl.server");
+    await expect(mod.scrapeListing("https://x.fr/a")).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("parse les variantes de schéma de réponse (data.extract)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ success: true, data: { extract: { price: "120000", surface: "40" } } }),
+      }),
+    );
+    const mod = await import("./firecrawl.server");
+    const raw = await mod.scrapeListing("https://x.fr/a");
+    expect(raw.price).toBe("120000");
+  });
 });

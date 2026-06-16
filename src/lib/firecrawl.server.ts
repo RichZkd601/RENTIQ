@@ -42,38 +42,86 @@ export function isFirecrawlConfigured(): boolean {
   return !!process.env.FIRECRAWL_API_KEY;
 }
 
+/** Codes HTTP transitoires : on retente (quota, surcharge, passerelle). */
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+const MAX_ATTEMPTS = 3;
+const REQUEST_TIMEOUT_MS = 60_000;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function isNetworkError(e: any): boolean {
+  return (
+    e?.name === "AbortError" ||
+    e?.name === "TypeError" ||
+    /fetch failed|network|ECONNRESET|ETIMEDOUT|EAI_AGAIN/i.test(String(e?.message ?? ""))
+  );
+}
+
+/**
+ * Effectue une extraction JSON Firecrawl avec garde-fous de fiabilité :
+ *  - retries + back-off exponentiel sur 429 / 5xx / erreurs réseau ;
+ *  - options adaptées aux portails immobiliers FR (rendu JS, géoloc FR,
+ *    proxy anti-bot, blocage pubs) pour maximiser le taux d'extraction ;
+ *  - parsing de réponse tolérant aux variantes de schéma.
+ */
 async function scrapeJson(url: string, schema: unknown, prompt: string): Promise<any> {
   const apiKey = process.env.FIRECRAWL_API_KEY;
   if (!apiKey) throw new FirecrawlNotConfiguredError();
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 45_000);
-  try {
-    const res = await fetch(FIRECRAWL_SCRAPE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        url,
-        onlyMainContent: true,
-        formats: ["json"],
-        jsonOptions: { schema, prompt },
-      }),
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`Firecrawl HTTP ${res.status} — ${body.slice(0, 200)}`);
+  const payload = JSON.stringify({
+    url,
+    onlyMainContent: true,
+    // Les portails (LeBonCoin/SeLoger/Bien'ici) sont des SPA protégées :
+    waitFor: 2500, // laisse le JS charger le prix/surface
+    blockAds: true,
+    removeBase64Images: true,
+    location: { country: "FR", languages: ["fr-FR"] },
+    proxy: "auto", // Firecrawl escalade en stealth sur les sites anti-bot
+    formats: ["json"],
+    jsonOptions: { schema, prompt },
+  });
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const res = await fetch(FIRECRAWL_SCRAPE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: payload,
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const body = await res.text().catch(() => "");
+        if (RETRYABLE_STATUS.has(res.status) && attempt < MAX_ATTEMPTS) {
+          lastError = new Error(`Firecrawl HTTP ${res.status}`);
+          await sleep(400 * 2 ** (attempt - 1));
+          continue;
+        }
+        if (res.status === 429) throw new Error("Firecrawl: limite de débit atteinte (429). Réessayez dans un instant.");
+        throw new Error(`Firecrawl HTTP ${res.status} — ${body.slice(0, 200)}`);
+      }
+
+      const json = await res.json();
+      if (json?.success === false) throw new Error(`Firecrawl: ${json?.error ?? "échec d'extraction"}`);
+      // Tolérant aux variantes de nommage du champ d'extraction.
+      return json?.data?.json ?? json?.data?.extract ?? json?.data?.llm_extraction ?? json?.data ?? {};
+    } catch (e: any) {
+      if (e instanceof FirecrawlNotConfiguredError) throw e;
+      if (isNetworkError(e) && attempt < MAX_ATTEMPTS) {
+        lastError = e;
+        await sleep(400 * 2 ** (attempt - 1));
+        continue;
+      }
+      if (e?.name === "AbortError") throw new Error("Firecrawl: délai dépassé (page trop lente).");
+      throw e;
+    } finally {
+      clearTimeout(timeout);
     }
-    const json = await res.json();
-    if (json?.success === false)
-      throw new Error(`Firecrawl: ${json?.error ?? "échec d'extraction"}`);
-    return json?.data?.json ?? json?.data ?? {};
-  } catch (e: any) {
-    if (e?.name === "AbortError") throw new Error("Firecrawl: délai dépassé (page trop lente).");
-    throw e;
-  } finally {
-    clearTimeout(timeout);
   }
+  throw lastError instanceof Error ? lastError : new Error("Firecrawl: échec après plusieurs tentatives.");
 }
 
 /** Extrait une annonce unique depuis l'URL d'une page de détail. */

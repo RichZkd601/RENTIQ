@@ -376,11 +376,16 @@ async function getMarketEstimate(
 ): Promise<MarketEstimate> {
   const est: MarketEstimate = {};
   if (postalCode) {
-    const { data: snap } = await supabase
+    // Un code postal peut couvrir plusieurs communes (donc plusieurs lignes) :
+    // on prend la plus récente avec une donnée prix renseignée. `.maybeSingle()`
+    // lèverait une erreur en cas de doublon — on borne explicitement à 1.
+    const { data: snaps } = await supabase
       .from("market_snapshots")
       .select("price_sqm_avg, rent_sqm_unfurnished, rent_sqm_furnished")
       .eq("postal_code", postalCode)
-      .maybeSingle();
+      .order("fetched_at", { ascending: false })
+      .limit(5);
+    const snap = (snaps ?? []).find((s: any) => s.price_sqm_avg != null) ?? (snaps ?? [])[0];
     if (snap) {
       est.priceSqmAvg = snap.price_sqm_avg != null ? Number(snap.price_sqm_avg) : undefined;
       est.rentSqmUnfurnished =
