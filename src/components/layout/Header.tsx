@@ -40,22 +40,22 @@ export function Header() {
           {email && (
             <>
               <Link to="/dashboard" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Cockpit
+                Tableau de bord
               </Link>
               <Link to="/patrimoine" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
                 Patrimoine
               </Link>
               <Link to="/radar" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Radar de marché
+                Opportunités
               </Link>
               <Link to="/recommandations" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Arbitrages
+                Recommandations
               </Link>
               <Link to="/veille" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Veille réglementaire
+                Réglementation
               </Link>
               <Link to="/assistant" className="text-muted-foreground hover:text-foreground" activeProps={{ className: "text-foreground" }}>
-                Copilote
+                Assistant
               </Link>
             </>
           )}
