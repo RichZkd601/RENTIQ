@@ -364,6 +364,7 @@ function NouveauBienPage() {
                 return (
                   <Input
                     type="number"
+                    placeholder={suggestedValue ? String(suggestedValue) : "Valeur estimée du bien"}
                     {...cv}
                     onChange={(e) => {
                       currentValueTouched.current = true;
