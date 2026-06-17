@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 export function Footer() {
   return (
     <footer className="border-t bg-muted/30">
@@ -8,6 +10,13 @@ export function Footer() {
           ni un conseil en investissement, ni un conseil fiscal ou juridique. La fiscalité et la réglementation locative
           évoluent fréquemment : consultez un professionnel (notaire, expert-comptable, avocat fiscaliste) avant tout arbitrage.
         </p>
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <Link to="/cgu" className="hover:text-foreground">CGU</Link>
+          <span aria-hidden>·</span>
+          <Link to="/confidentialite" className="hover:text-foreground">Confidentialité</Link>
+          <span aria-hidden>·</span>
+          <span>© {new Date().getFullYear()} RentIQ</span>
+        </div>
       </div>
     </footer>
   );
