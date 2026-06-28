@@ -174,17 +174,57 @@ function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-svh items-center justify-center bg-muted/30 px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-3 text-center">
-          <div className="mx-auto grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <CardTitle className="text-2xl">RentIQ</CardTitle>
-          <CardDescription>
-            La meilleure stratégie pour votre bien, en 60 secondes.
-          </CardDescription>
-        </CardHeader>
+    <div className="grid min-h-svh lg:grid-cols-2">
+      {/* Panneau marque — aurora */}
+      <aside className="bg-aurora noise relative hidden flex-col justify-between overflow-hidden p-12 lg:flex">
+        <div className="bg-grid pointer-events-none absolute inset-0 -z-[1]" aria-hidden />
+        <a href="/" className="relative z-[2] inline-flex items-center gap-2.5 font-semibold tracking-tight">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient shadow-glow">
+            <Sparkles className="h-4 w-4 text-white" />
+          </span>
+          <span className="text-[17px] font-bold">
+            Rent<span className="text-gradient">IQ</span>
+          </span>
+        </a>
+        <div className="relative z-[2] max-w-md">
+          <h2 className="text-[32px] font-bold leading-[1.1] tracking-[-0.03em] text-foreground">
+            La rigueur d'un investisseur professionnel,{" "}
+            <span className="text-gradient-animated">augmentée par l'IA.</span>
+          </h2>
+          <ul className="mt-8 space-y-4 text-[14px] text-foreground">
+            {[
+              "6 stratégies chiffrées et comparées en 60 secondes",
+              "Fiscalité 2026 & Loi Le Meur intégrées par défaut",
+              "Un copilote IA qui arbitre — il n'invente jamais un chiffre",
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-5 w-5 flex-none place-items-center rounded-full bg-brand-gradient text-white shadow-glow">
+                  <Sparkles className="h-2.5 w-2.5" />
+                </span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="relative z-[2] text-xs text-muted-foreground">
+          3 évaluations offertes · Sans carte bancaire
+        </p>
+      </aside>
+
+      {/* Formulaire */}
+      <div className="bg-aurora relative flex items-center justify-center px-4 py-12 lg:bg-none lg:bg-background">
+        <Card className="glass-strong w-full max-w-md border-border/60 shadow-elev">
+          <CardHeader className="space-y-3 text-center">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-brand-gradient text-white shadow-glow animate-pulse-glow">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <CardTitle className="text-2xl font-bold">
+              Rent<span className="text-gradient">IQ</span>
+            </CardTitle>
+            <CardDescription>
+              La meilleure stratégie pour votre bien, en 60 secondes.
+            </CardDescription>
+          </CardHeader>
         <CardContent className="space-y-4">
           <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
             <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden>
@@ -215,7 +255,7 @@ function AuthPage() {
                   autoComplete="email"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" variant="gradient" className="w-full" disabled={loading}>
                 {loading ? "..." : "Envoyer le lien de réinitialisation"}
               </Button>
               <button
@@ -295,14 +335,15 @@ function AuthPage() {
                     autoComplete={mode === "signup" ? "new-password" : "current-password"}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" variant="gradient" className="w-full" disabled={loading}>
                   {loading ? "..." : mode === "signup" ? "Créer mon compte" : "Se connecter"}
                 </Button>
               </form>
             </Tabs>
           )}
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

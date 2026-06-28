@@ -6,9 +6,11 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * RentIQ — Design system
- * Direction : SaaS premium type Qonto / Pennylane / Notion / Apple.
- * Tokens sémantiques uniquement, jamais de couleurs hardcodées dans les composants.
+ * RentIQ — Design system « Aurora »
+ * Direction : wealth-tech premium, distinctif et ownable.
+ * Marque indigo-violet électrique + dégradé aurora signature,
+ * émeraude « argent/croissance », or pour le premium.
+ * Tokens sémantiques uniquement — jamais de couleurs hardcodées dans les composants.
  */
 
 @theme inline {
@@ -17,6 +19,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 16px);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -40,6 +43,14 @@
   --color-ring-offset-background: var(--background);
 
   /* RentIQ — sémantique métier */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-2: var(--brand-2);
+  --color-brand-3: var(--brand-3);
+  --color-brand-soft: var(--brand-soft);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-soft: var(--gold-soft);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-success-soft: var(--success-soft);
@@ -69,137 +80,179 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
 
+  /* Ombres premium — neutres + halo de marque */
   --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 30px rgba(15, 23, 42, 0.06);
-  --shadow-card-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 12px 40px rgba(15, 23, 42, 0.08);
-  --shadow-elev: 0 20px 60px rgba(15, 23, 42, 0.10);
+  --shadow-card-hover: 0 2px 4px rgba(15, 23, 42, 0.05), 0 18px 50px rgba(79, 70, 229, 0.12);
+  --shadow-elev: 0 30px 80px -20px rgba(49, 46, 129, 0.22);
+  --shadow-glow: 0 10px 30px -8px var(--brand-glow), 0 2px 8px -2px var(--brand-glow);
+  --shadow-glow-lg: 0 20px 60px -12px var(--brand-glow);
+
+  /* Easings signature */
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root {
-  --radius: 0.875rem; /* 14px — cartes à 16-20px, boutons à 10-12px via radius-md/sm */
+  --radius: 0.9rem; /* ~14px */
 
-  /* Neutres — slate, lumineux, premium */
-  --background: #F8FAFC;       /* fond principal */
-  --foreground: #0F172A;       /* texte principal */
+  /* Neutres — slate légèrement teinté indigo, lumineux, premium */
+  --background: #F7F8FC;
+  --foreground: #0C1126;
 
   --card: #FFFFFF;
-  --card-foreground: #0F172A;
+  --card-foreground: #0C1126;
 
   --popover: #FFFFFF;
-  --popover-foreground: #0F172A;
+  --popover-foreground: #0C1126;
 
-  /* Primaire — bleu confiance #2563EB */
-  --primary: #2563EB;
+  /* Primaire — indigo-violet électrique (marque) */
+  --primary: #5B4FF0;
   --primary-foreground: #FFFFFF;
 
-  --secondary: #F1F5F9;
-  --secondary-foreground: #0F172A;
+  --secondary: #EEF0FA;
+  --secondary-foreground: #0C1126;
 
-  --muted: #F1F5F9;
-  --muted-foreground: #64748B;   /* texte discret */
+  --muted: #EEF0FA;
+  --muted-foreground: #5B6178;
 
-  --accent: #EFF6FF;             /* bleu très clair (badge bleu) */
-  --accent-foreground: #1D4ED8;
+  --accent: #ECECFE;
+  --accent-foreground: #3F33D6;
 
-  --destructive: #DC2626;
+  --destructive: #E11D48;
   --destructive-foreground: #FFFFFF;
 
-  --border: #E2E8F0;
-  --input: #E2E8F0;
-  --ring: #2563EB;
+  --border: #E4E6F2;
+  --input: #E4E6F2;
+  --ring: #5B4FF0;
 
-  /* RentIQ — métier */
-  --success: #16A34A;
+  /* RentIQ — marque & dégradé aurora signature */
+  --brand: #5B4FF0;
+  --brand-foreground: #FFFFFF;
+  --brand-2: #8B5CF6;   /* violet */
+  --brand-3: #22D3EE;   /* cyan */
+  --brand-soft: #ECECFE;
+  --brand-glow: rgba(91, 79, 240, 0.45);
+
+  /* Or — premium, rare */
+  --gold: #E0A33B;
+  --gold-foreground: #2A1A00;
+  --gold-soft: #FBF0DA;
+
+  /* Métier */
+  --success: #0EA56A;
   --success-foreground: #FFFFFF;
-  --success-soft: #DCFCE7;
-  --warning: #F97316;
+  --success-soft: #D6F5E6;
+  --warning: #F08C2E;
   --warning-foreground: #FFFFFF;
-  --warning-soft: #FFEDD5;
-  --danger: #DC2626;
+  --warning-soft: #FDEBD6;
+  --danger: #E11D48;
   --danger-foreground: #FFFFFF;
-  --danger-soft: #FEE2E2;
-  --info: #2563EB;
+  --danger-soft: #FCE2E8;
+  --info: #5B4FF0;
   --info-foreground: #FFFFFF;
-  --info-soft: #EFF6FF;
+  --info-soft: #ECECFE;
 
-  --chart-1: #2563EB;
-  --chart-2: #16A34A;
-  --chart-3: #F97316;
-  --chart-4: #DC2626;
-  --chart-5: #475569;
+  --chart-1: #5B4FF0;
+  --chart-2: #0EA56A;
+  --chart-3: #22D3EE;
+  --chart-4: #E0A33B;
+  --chart-5: #8B5CF6;
 
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0F172A;
-  --sidebar-primary: #2563EB;
+  --sidebar-foreground: #0C1126;
+  --sidebar-primary: #5B4FF0;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F1F5F9;
-  --sidebar-accent-foreground: #0F172A;
-  --sidebar-border: #E2E8F0;
-  --sidebar-ring: #2563EB;
+  --sidebar-accent: #EEF0FA;
+  --sidebar-accent-foreground: #0C1126;
+  --sidebar-border: #E4E6F2;
+  --sidebar-ring: #5B4FF0;
 }
 
 .dark {
-  --background: #0B1220;
-  --foreground: #F8FAFC;
+  /* Indigo-navy profond, luxueux */
+  --background: #07060F;
+  --foreground: #F4F4FB;
 
-  --card: #111A2E;
-  --card-foreground: #F8FAFC;
+  --card: #11102099;
+  --card-foreground: #F4F4FB;
 
-  --popover: #111A2E;
-  --popover-foreground: #F8FAFC;
+  --popover: #141327;
+  --popover-foreground: #F4F4FB;
 
-  --primary: #3B82F6;
-  --primary-foreground: #0B1220;
+  --primary: #8B7CFF;
+  --primary-foreground: #0A0813;
 
-  --secondary: #1E293B;
-  --secondary-foreground: #F8FAFC;
+  --secondary: #1B1A32;
+  --secondary-foreground: #F4F4FB;
 
-  --muted: #1E293B;
-  --muted-foreground: #94A3B8;
+  --muted: #17162B;
+  --muted-foreground: #A0A2C0;
 
-  --accent: #1E3A8A;
-  --accent-foreground: #DBEAFE;
+  --accent: #241F4D;
+  --accent-foreground: #CFC9FF;
 
-  --destructive: #EF4444;
+  --destructive: #FB5577;
   --destructive-foreground: #FFFFFF;
 
   --border: rgba(255, 255, 255, 0.10);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #3B82F6;
+  --input: rgba(255, 255, 255, 0.14);
+  --ring: #8B7CFF;
 
-  --success: #22C55E;
-  --success-foreground: #052E16;
-  --success-soft: rgba(34, 197, 94, 0.15);
-  --warning: #FB923C;
-  --warning-foreground: #431407;
-  --warning-soft: rgba(251, 146, 60, 0.18);
-  --danger: #EF4444;
+  --brand: #8B7CFF;
+  --brand-foreground: #0A0813;
+  --brand-2: #A78BFA;
+  --brand-3: #34E0F2;
+  --brand-soft: rgba(139, 124, 255, 0.16);
+  --brand-glow: rgba(139, 124, 255, 0.5);
+
+  --gold: #F1B955;
+  --gold-foreground: #2A1A00;
+  --gold-soft: rgba(241, 185, 85, 0.16);
+
+  --success: #2BD08A;
+  --success-foreground: #042417;
+  --success-soft: rgba(43, 208, 138, 0.16);
+  --warning: #FBA94C;
+  --warning-foreground: #2A1500;
+  --warning-soft: rgba(251, 169, 76, 0.18);
+  --danger: #FB5577;
   --danger-foreground: #FFFFFF;
-  --danger-soft: rgba(239, 68, 68, 0.18);
-  --info: #3B82F6;
-  --info-foreground: #FFFFFF;
-  --info-soft: rgba(59, 130, 246, 0.18);
+  --danger-soft: rgba(251, 85, 119, 0.18);
+  --info: #8B7CFF;
+  --info-foreground: #0A0813;
+  --info-soft: rgba(139, 124, 255, 0.16);
 
-  --sidebar: #111A2E;
-  --sidebar-foreground: #F8FAFC;
-  --sidebar-primary: #3B82F6;
-  --sidebar-primary-foreground: #0B1220;
-  --sidebar-accent: #1E293B;
-  --sidebar-accent-foreground: #F8FAFC;
+  --chart-1: #8B7CFF;
+  --chart-2: #2BD08A;
+  --chart-3: #34E0F2;
+  --chart-4: #F1B955;
+  --chart-5: #C4B5FD;
+
+  --sidebar: #0E0D1C;
+  --sidebar-foreground: #F4F4FB;
+  --sidebar-primary: #8B7CFF;
+  --sidebar-primary-foreground: #0A0813;
+  --sidebar-accent: #1B1A32;
+  --sidebar-accent-foreground: #F4F4FB;
   --sidebar-border: rgba(255, 255, 255, 0.10);
-  --sidebar-ring: #3B82F6;
+  --sidebar-ring: #8B7CFF;
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
+  html {
+    scroll-behavior: smooth;
+  }
   html, body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   body {
     background-color: var(--color-background);
@@ -209,19 +262,50 @@
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+    font-feature-settings: "ss01" 1, "cv01" 1;
   }
   h1 {
-    letter-spacing: -0.03em;
-    line-height: 1.05;
+    letter-spacing: -0.035em;
+    line-height: 1.04;
+  }
+  /* Chiffres alignés et tabulaires pour les KPIs financiers */
+  .tabular, table, .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--brand) 28%, transparent);
+    color: var(--foreground);
+  }
+  /* Scrollbar discrète et premium */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
+    background-clip: padding-box;
   }
 }
 
-/* Utilitaires métier */
+/* ============================================================
+   Utilitaires métier + effets sublimes
+   ============================================================ */
 @layer utilities {
+  /* — Couleurs sémantiques — */
+  .text-brand { color: var(--color-brand); }
+  .text-gold { color: var(--color-gold); }
   .text-success { color: var(--color-success); }
   .text-warning { color: var(--color-warning); }
   .text-danger { color: var(--color-danger); }
   .text-info { color: var(--color-info); }
+  .bg-gold-soft { background-color: var(--color-gold-soft); }
   .bg-success-soft { background-color: var(--color-success-soft); }
   .bg-warning-soft { background-color: var(--color-warning-soft); }
   .bg-danger-soft { background-color: var(--color-danger-soft); }
@@ -229,7 +313,215 @@
   .border-success { border-color: var(--color-success); }
   .border-warning { border-color: var(--color-warning); }
   .border-danger { border-color: var(--color-danger); }
+
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-card-hover { box-shadow: var(--shadow-card-hover); }
   .shadow-elev { box-shadow: var(--shadow-elev); }
+  .shadow-glow { box-shadow: var(--shadow-glow); }
+  .shadow-glow-lg { box-shadow: var(--shadow-glow-lg); }
+
+  /* — Dégradés de marque — */
+  .bg-brand-gradient {
+    background-image: linear-gradient(120deg, var(--brand) 0%, var(--brand-2) 55%, var(--brand-3) 110%);
+  }
+  .bg-brand-gradient-soft {
+    background-image: linear-gradient(120deg,
+      color-mix(in oklab, var(--brand) 14%, transparent),
+      color-mix(in oklab, var(--brand-3) 12%, transparent));
+  }
+  .border-gradient-brand {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--card), var(--card)) padding-box,
+      linear-gradient(120deg, var(--brand), var(--brand-2), var(--brand-3)) border-box;
+  }
+
+  /* — Texte dégradé (animé) — */
+  .text-gradient {
+    background-image: linear-gradient(110deg, var(--brand) 0%, var(--brand-2) 45%, var(--brand-3) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+  .text-gradient-animated {
+    background-image: linear-gradient(110deg, var(--brand) 0%, var(--brand-2) 30%, var(--brand-3) 55%, var(--brand-2) 80%, var(--brand) 100%);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-pan 7s linear infinite;
+  }
+
+  /* — Glassmorphism — */
+  .glass {
+    background-color: color-mix(in oklab, var(--card) 70%, transparent);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid color-mix(in oklab, var(--foreground) 8%, transparent);
+  }
+  .glass-strong {
+    background-color: color-mix(in oklab, var(--card) 86%, transparent);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid color-mix(in oklab, var(--foreground) 10%, transparent);
+  }
+
+  /* — Fonds aurora / mesh / grille — */
+  .bg-aurora {
+    position: relative;
+    background-color: var(--background);
+  }
+  .bg-aurora::before {
+    content: "";
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 130%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(38% 50% at 18% 12%, color-mix(in oklab, var(--brand) 30%, transparent) 0%, transparent 60%),
+      radial-gradient(34% 46% at 82% 8%, color-mix(in oklab, var(--brand-3) 26%, transparent) 0%, transparent 60%),
+      radial-gradient(40% 52% at 60% 30%, color-mix(in oklab, var(--brand-2) 24%, transparent) 0%, transparent 62%);
+    filter: blur(10px);
+    animation: aurora 18s var(--ease-spring) infinite alternate;
+  }
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 5%, transparent) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(80% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+  .bg-dots {
+    background-image: radial-gradient(color-mix(in oklab, var(--foreground) 12%, transparent) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* — Grain premium — */
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* — Spotlight au survol (suit la souris via --mx/--my) — */
+  .spotlight { position: relative; isolation: isolate; }
+  .spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 0%),
+      color-mix(in oklab, var(--brand) 16%, transparent), transparent 70%);
+  }
+  .spotlight:hover::before { opacity: 1; }
+
+  /* — Lift au survol — */
+  .hover-lift {
+    transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-spring), border-color 0.4s ease;
+    will-change: transform;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  /* — Shimmer (skeleton / accents) — */
+  .shimmer {
+    background-image: linear-gradient(110deg,
+      transparent 25%,
+      color-mix(in oklab, var(--brand) 22%, transparent) 50%,
+      transparent 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2.4s linear infinite;
+  }
+
+  /* — Anneau lumineux animé (badges premium / CTA) — */
+  .glow-ring {
+    position: relative;
+  }
+  .glow-ring::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(120deg, var(--brand), var(--brand-3), var(--brand-2), var(--brand));
+    background-size: 300% 300%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: gradient-pan 6s linear infinite;
+    pointer-events: none;
+  }
+
+  /* — Révélations au scroll / entrée — */
+  .animate-fade-up { animation: fade-up 0.7s var(--ease-out-soft) both; }
+  .animate-fade-in { animation: fade-in 0.8s ease both; }
+  .animate-float { animation: float 6s ease-in-out infinite; }
+  .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+  .delay-4 { animation-delay: 0.32s; }
+  .delay-5 { animation-delay: 0.40s; }
+  .delay-6 { animation-delay: 0.48s; }
+}
+
+/* ============================================================
+   Keyframes
+   ============================================================ */
+@keyframes aurora {
+  0%   { transform: translate3d(-2%, 0, 0) scale(1); }
+  50%  { transform: translate3d(3%, 2%, 0) scale(1.08); }
+  100% { transform: translate3d(2%, -1%, 0) scale(1.04); }
+}
+@keyframes gradient-pan {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 0%, transparent); }
+  50%      { box-shadow: 0 0 0 8px color-mix(in oklab, var(--brand) 14%, transparent); }
+}
+
+/* Accessibilité — respect du réglage système */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto; }
 }

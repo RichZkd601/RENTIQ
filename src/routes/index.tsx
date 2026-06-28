@@ -16,6 +16,7 @@ import {
   Star,
   TrendingUp,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import logoUrl from "@/assets/rentiq-logo.png";
 
 export const Route = createFileRoute("/")({
@@ -38,39 +39,50 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+/** Suit le curseur pour alimenter l'effet `.spotlight`. */
+function trackSpotlight(e: React.MouseEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+}
+
 function Landing() {
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <Header />
       <main className="flex-1">
         {/* HERO */}
-        <section className="relative overflow-hidden">
-          <div className="mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16 lg:py-24">
+        <section className="bg-aurora noise relative overflow-hidden">
+          <div className="bg-grid pointer-events-none absolute inset-0 -z-[1]" aria-hidden />
+          <div className="relative z-[2] mx-auto grid max-w-7xl gap-10 px-4 py-10 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16 lg:py-24">
             {/* Colonne gauche */}
             <div className="flex min-w-0 flex-col justify-center">
-              <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary shadow-card sm:text-[11px]">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <div className="glow-ring animate-fade-up mb-5 inline-flex w-fit items-center gap-2 rounded-full bg-card/80 px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary shadow-card backdrop-blur sm:text-[11px]">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                </span>
                 Le copilote patrimonial de l'investisseur
               </div>
 
-              <h1 className="text-[34px] font-bold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-[52px] lg:text-[56px]">
+              <h1 className="animate-fade-up delay-1 text-[34px] font-bold leading-[1.05] tracking-[-0.03em] text-foreground sm:text-[52px] lg:text-[56px]">
                 Investissez avec méthode.<br />
-                <span className="text-primary">Décidez avec conviction.</span>
+                <span className="text-gradient-animated">Décidez avec conviction.</span>
               </h1>
 
-              <p className="mt-5 max-w-xl text-[15px] leading-[1.55] text-muted-foreground sm:mt-6 sm:text-[17px] sm:leading-[1.6]">
+              <p className="animate-fade-up delay-2 mt-5 max-w-xl text-[15px] leading-[1.55] text-muted-foreground sm:mt-6 sm:text-[17px] sm:leading-[1.6]">
                 RentIQ vous accompagne avant, pendant et après l'achat : évaluez vos opportunités,
                 pilotez votre portefeuille et anticipez vos arbitrages — avec la rigueur d'un investisseur professionnel.
               </p>
 
-              <ul className="mt-7 space-y-2.5 sm:mt-8 sm:space-y-3">
+              <ul className="animate-fade-up delay-3 mt-7 space-y-2.5 sm:mt-8 sm:space-y-3">
                 {[
                   { icon: Scale, label: "Réglementation à jour — Loi Le Meur, fiscalité 2026" },
                   { icon: TrendingUp, label: "Moteur de calcul déterministe, audité et défendable" },
                   { icon: Sparkles, label: "Un copilote IA qui arbitre — il n'invente pas" },
                 ].map((f) => (
                   <li key={f.label} className="flex items-start gap-3 text-[14px] leading-snug text-foreground sm:text-[15px]">
-                    <span className="mt-0.5 grid h-5 w-5 flex-none place-items-center rounded-full bg-info-soft text-primary">
+                    <span className="mt-0.5 grid h-5 w-5 flex-none place-items-center rounded-full bg-brand-soft text-primary ring-1 ring-primary/15">
                       <f.icon className="h-3 w-3" strokeWidth={2.5} />
                     </span>
                     <span className="min-w-0">{f.label}</span>
@@ -78,11 +90,11 @@ function Landing() {
                 ))}
               </ul>
 
-              <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center">
-                <Button size="lg" className="h-12 w-full rounded-xl px-6 text-[15px] font-semibold shadow-card sm:w-auto" asChild>
+              <div className="animate-fade-up delay-4 mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center">
+                <Button size="lg" variant="gradient" className="h-12 w-full rounded-xl px-6 text-[15px] font-semibold sm:w-auto" asChild>
                   <Link to="/auth">
                     Évaluer une opportunité
-                    <ArrowRight className="ml-1.5 h-4 w-4" />
+                    <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </Button>
                 <span className="text-center text-xs text-muted-foreground sm:text-left">
@@ -90,15 +102,15 @@ function Landing() {
                 </span>
               </div>
 
-              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted-foreground sm:mt-6 sm:text-[12px]">
+              <div className="animate-fade-up delay-5 mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-muted-foreground sm:mt-6 sm:text-[12px]">
                 <Trust icon={ShieldCheck} label="Données vérifiées" />
                 <Trust icon={Lock} label="Sécurisé" />
                 <Trust icon={FileCheck} label="Conforme RGPD" />
               </div>
 
               {/* Témoignage */}
-              <figure className="mt-8 rounded-2xl border bg-card p-4 shadow-card sm:mt-10 sm:p-5">
-                <div className="flex items-center gap-1 text-primary">
+              <figure className="animate-fade-up delay-6 hover-lift mt-8 rounded-2xl border bg-card/80 p-4 shadow-card backdrop-blur sm:mt-10 sm:p-5">
+                <div className="flex items-center gap-1 text-gold">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="h-3.5 w-3.5 fill-current" />
                   ))}
@@ -108,7 +120,7 @@ function Landing() {
                   m'a sauvé 18 mois de procédure. »
                 </blockquote>
                 <figcaption className="mt-3 flex items-center gap-3">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-secondary text-[11px] font-semibold text-foreground">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-gradient text-[11px] font-semibold text-white">
                     AM
                   </div>
                   <div className="min-w-0 text-[12px] leading-tight">
@@ -121,8 +133,10 @@ function Landing() {
 
             {/* Colonne droite — preview dashboard */}
             <div className="relative min-w-0">
-              <div className="pointer-events-none absolute inset-x-0 -inset-y-4 -z-10 rounded-[32px] bg-gradient-to-br from-info-soft via-background to-background sm:-inset-x-4 sm:-inset-y-6 lg:-inset-x-8" />
-              <DashboardPreview />
+              <div className="pointer-events-none absolute inset-x-0 -inset-y-6 -z-10 rounded-[36px] bg-brand-gradient opacity-20 blur-3xl sm:-inset-x-6" />
+              <div className="animate-float">
+                <DashboardPreview />
+              </div>
             </div>
           </div>
         </section>
@@ -136,8 +150,10 @@ function Landing() {
               { k: "Loi Le Meur", v: "intégrée par défaut" },
               { k: "Fiscalité 2026", v: "à jour, sourcée" },
             ].map((it) => (
-              <div key={it.k}>
-                <div className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">{it.k}</div>
+              <div key={it.k} className="group">
+                <div className="text-2xl font-bold tracking-tight text-foreground transition-colors group-hover:text-primary sm:text-3xl">
+                  {it.k}
+                </div>
                 <div className="mt-1 text-xs text-muted-foreground sm:text-sm">{it.v}</div>
               </div>
             ))}
@@ -145,7 +161,7 @@ function Landing() {
         </section>
 
         {/* Différenciateur */}
-        <section>
+        <section className="relative">
           <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20">
             <div className="max-w-2xl">
               <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
@@ -179,16 +195,21 @@ function Landing() {
         </section>
 
         {/* CTA final */}
-        <section className="border-t bg-card">
-          <div className="mx-auto max-w-6xl px-4 py-14 text-center sm:px-6 sm:py-20">
-            <h2 className="text-[26px] font-bold tracking-[-0.02em] text-foreground sm:text-[34px]">
-              Construisez votre patrimoine avec méthode.
+        <section className="relative overflow-hidden border-t">
+          <div className="bg-aurora noise absolute inset-0 -z-[1]" aria-hidden />
+          <div className="relative z-[2] mx-auto max-w-6xl px-4 py-14 text-center sm:px-6 sm:py-24">
+            <div className="mx-auto mb-6 grid h-12 w-12 place-items-center rounded-2xl bg-brand-gradient shadow-glow animate-pulse-glow">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <h2 className="text-[26px] font-bold tracking-[-0.02em] text-foreground sm:text-[36px]">
+              Construisez votre patrimoine{" "}
+              <span className="text-gradient">avec méthode.</span>
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-[14px] text-muted-foreground sm:text-[15px]">
               3 évaluations offertes par mois. Aucune carte requise. L'outil de référence pour
               valider une opportunité et structurer un dossier crédible.
             </p>
-            <Button size="lg" className="mt-7 h-12 w-full rounded-xl px-6 text-[15px] font-semibold shadow-card sm:mt-8 sm:w-auto" asChild>
+            <Button size="lg" variant="gradient" className="mt-7 h-12 w-full rounded-xl px-6 text-[15px] font-semibold sm:mt-8 sm:w-auto" asChild>
               <Link to="/auth">
                 Ouvrir mon espace investisseur
                 <ArrowRight className="ml-1.5 h-4 w-4" />
@@ -202,7 +223,7 @@ function Landing() {
   );
 }
 
-function Trust({ icon: Icon, label }: { icon: typeof ShieldCheck; label: string }) {
+function Trust({ icon: Icon, label }: { icon: LucideIcon; label: string }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <Icon className="h-3.5 w-3.5 text-success" strokeWidth={2.25} />
@@ -216,19 +237,22 @@ function FeatureCard({
   title,
   body,
 }: {
-  icon: typeof ShieldCheck;
+  icon: LucideIcon;
   title: string;
   body: string;
 }) {
   return (
-    <div className="group rounded-2xl border bg-card p-5 shadow-card transition hover:shadow-card-hover sm:p-6">
-      <div className="grid h-10 w-10 place-items-center rounded-xl bg-info-soft text-primary">
+    <div
+      onMouseMove={trackSpotlight}
+      className="spotlight hover-lift group rounded-2xl border bg-card p-5 shadow-card sm:p-6"
+    >
+      <div className="relative z-[1] grid h-11 w-11 place-items-center rounded-xl bg-brand-gradient text-white shadow-glow transition-transform duration-300 [transition-timing-function:var(--ease-spring)] group-hover:scale-110 group-hover:-rotate-3">
         <Icon className="h-5 w-5" strokeWidth={2} />
       </div>
-      <h3 className="mt-4 text-[16px] font-semibold tracking-tight text-foreground sm:mt-5 sm:text-[17px]">
+      <h3 className="relative z-[1] mt-4 text-[16px] font-semibold tracking-tight text-foreground sm:mt-5 sm:text-[17px]">
         {title}
       </h3>
-      <p className="mt-2 text-[13.5px] leading-relaxed text-muted-foreground sm:text-[14px]">{body}</p>
+      <p className="relative z-[1] mt-2 text-[13.5px] leading-relaxed text-muted-foreground sm:text-[14px]">{body}</p>
     </div>
   );
 }
@@ -237,11 +261,13 @@ function FeatureCard({
 
 function DashboardPreview() {
   return (
-    <div className="overflow-hidden rounded-2xl border bg-card shadow-elev">
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-card shadow-elev ring-1 ring-black/5">
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-2 border-b px-3 py-2.5 sm:px-5 sm:py-3">
+      <div className="flex items-center justify-between gap-2 border-b bg-gradient-to-r from-brand-soft/60 to-transparent px-3 py-2.5 sm:px-5 sm:py-3">
         <div className="flex min-w-0 items-center gap-2">
-          <img src={logoUrl} alt="" width={20} height={20} className="h-5 w-5 shrink-0" />
+          <span className="grid h-6 w-6 place-items-center rounded-lg bg-brand-gradient">
+            <img src={logoUrl} alt="" width={14} height={14} className="h-3.5 w-3.5 shrink-0" />
+          </span>
           <span className="truncate text-[13px] font-semibold tracking-tight">RentIQ</span>
         </div>
         <nav className="hidden items-center gap-5 text-[12px] text-muted-foreground md:flex">
@@ -255,7 +281,7 @@ function DashboardPreview() {
             <Bell className="h-3.5 w-3.5" />
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-danger ring-2 ring-card" />
           </span>
-          <div className="grid h-7 w-7 place-items-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+          <div className="grid h-7 w-7 place-items-center rounded-full bg-brand-gradient text-[11px] font-semibold text-white">
             A
           </div>
         </div>
@@ -275,7 +301,7 @@ function DashboardPreview() {
           <button className="rounded-lg border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground">
             Importer
           </button>
-          <button className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-medium text-primary-foreground">
+          <button className="inline-flex items-center gap-1 rounded-lg bg-brand-gradient px-3 py-1.5 text-[11px] font-medium text-white shadow-glow">
             + Nouvelle analyse
           </button>
         </div>
@@ -296,7 +322,7 @@ function DashboardPreview() {
             <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sm:text-[11px]">
               Dernière analyse
             </span>
-            <span className="shrink-0 rounded-full bg-info-soft px-2 py-0.5 text-[10px] font-semibold text-primary">
+            <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-semibold text-primary">
               Aujourd'hui
             </span>
           </div>
@@ -367,7 +393,7 @@ function DashboardPreview() {
           </div>
         </div>
 
-        <div className="rounded-xl border bg-info-soft/60 p-3 sm:p-4">
+        <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-brand-soft/60 p-3 sm:p-4">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
             <Sparkles className="h-3.5 w-3.5" />
             Stratégie recommandée
@@ -376,7 +402,7 @@ function DashboardPreview() {
           <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
             Meilleure rentabilité nette, risque faible.
           </p>
-          <button className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground">
+          <button className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-lg bg-brand-gradient px-3 py-1.5 text-[11px] font-semibold text-white shadow-glow">
             Voir l'analyse <ArrowUpRight className="h-3 w-3" />
           </button>
           <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground">
@@ -384,7 +410,7 @@ function DashboardPreview() {
             <span className="font-semibold text-foreground">92 %</span>
           </div>
           <div className="mt-1 h-1 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-primary" style={{ width: "92%" }} />
+            <div className="h-full rounded-full bg-brand-gradient" style={{ width: "92%" }} />
           </div>
         </div>
       </div>
@@ -408,12 +434,12 @@ function Metric({
   trend?: "up";
 }) {
   return (
-    <div className="rounded-xl border bg-card p-2.5 sm:p-3">
+    <div className="hover-lift rounded-xl border bg-card p-2.5 sm:p-3">
       <div className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </div>
       <div className="mt-1.5 flex items-baseline gap-1">
-        <span className="text-[18px] font-bold leading-none tracking-tight text-foreground sm:text-[22px]">
+        <span className="tabular text-[18px] font-bold leading-none tracking-tight text-foreground sm:text-[22px]">
           {value}
         </span>
         {sub && <span className="text-[11px] text-muted-foreground">{sub}</span>}
@@ -446,7 +472,7 @@ function Kpi({
   return (
     <div className="min-w-0">
       <div className="truncate text-[10px] text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-[14px] font-bold tracking-tight sm:text-[15px] ${color}`}>{value}</div>
+      <div className={`tabular mt-1 text-[14px] font-bold tracking-tight sm:text-[15px] ${color}`}>{value}</div>
     </div>
   );
 }
@@ -462,7 +488,7 @@ function Sparkline() {
         return (
           <div key={i} className="flex flex-1 flex-col items-stretch justify-end gap-0.5">
             <div
-              className={`rounded-sm ${neg ? "bg-danger/70" : "bg-success/80"}`}
+              className={`rounded-sm ${neg ? "bg-danger/70" : "bg-gradient-to-t from-primary/70 to-brand-3"}`}
               style={{ height: `${Math.max(8, h)}%` }}
             />
           </div>

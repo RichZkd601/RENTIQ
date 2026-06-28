@@ -2,11 +2,13 @@ import { Link } from "@tanstack/react-router";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/30">
+    <footer className="relative overflow-hidden border-t bg-muted/30">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-brand-gradient opacity-40" aria-hidden />
       <div className="mx-auto max-w-6xl px-4 py-8 text-xs text-muted-foreground">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="font-medium text-foreground">
-            RentIQ — Le copilote patrimonial de l'investisseur immobilier
+            <span className="font-bold">Rent<span className="text-gradient">IQ</span></span>
+            {" "}— Le copilote patrimonial de l'investisseur immobilier
           </p>
           <nav className="flex flex-wrap gap-4">
             <Link to="/legal/cgu" className="hover:text-foreground underline-offset-4 hover:underline">
