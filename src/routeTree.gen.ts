@@ -9,17 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
-import { Route as CguRouteImport } from './routes/cgu'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LegalConfidentialiteRouteImport } from './routes/legal.confidentialite'
+import { Route as LegalCguRouteImport } from './routes/legal.cgu'
 import { Route as AuthenticatedVeilleRouteImport } from './routes/_authenticated/veille'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedRecommandationsRouteImport } from './routes/_authenticated/recommandations'
 import { Route as AuthenticatedRadarRouteImport } from './routes/_authenticated/radar'
 import { Route as AuthenticatedHistoriqueRouteImport } from './routes/_authenticated/historique'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCompteRouteImport } from './routes/_authenticated/compte'
 import { Route as AuthenticatedAssistantRouteImport } from './routes/_authenticated/assistant'
 import { Route as AuthenticatedAnalyserRouteImport } from './routes/_authenticated/analyser'
 import { Route as AuthenticatedPatrimoineIndexRouteImport } from './routes/_authenticated/patrimoine.index'
@@ -29,16 +30,6 @@ import { Route as AuthenticatedAnalyseIdRouteImport } from './routes/_authentica
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as ApiPublicHooksRefreshMarketDataRouteImport } from './routes/api/public/hooks/refresh-market-data'
 
-const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
-  id: '/confidentialite',
-  path: '/confidentialite',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CguRoute = CguRouteImport.update({
-  id: '/cgu',
-  path: '/cgu',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -51,6 +42,16 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalConfidentialiteRoute = LegalConfidentialiteRouteImport.update({
+  id: '/legal/confidentialite',
+  path: '/legal/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalCguRoute = LegalCguRouteImport.update({
+  id: '/legal/cgu',
+  path: '/legal/cgu',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVeilleRoute = AuthenticatedVeilleRouteImport.update({
@@ -82,6 +83,11 @@ const AuthenticatedHistoriqueRoute = AuthenticatedHistoriqueRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCompteRoute = AuthenticatedCompteRouteImport.update({
+  id: '/compte',
+  path: '/compte',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAssistantRoute = AuthenticatedAssistantRouteImport.update({
@@ -133,16 +139,17 @@ const ApiPublicHooksRefreshMarketDataRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/cgu': typeof CguRoute
-  '/confidentialite': typeof ConfidentialiteRoute
   '/analyser': typeof AuthenticatedAnalyserRoute
   '/assistant': typeof AuthenticatedAssistantRoute
+  '/compte': typeof AuthenticatedCompteRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/recommandations': typeof AuthenticatedRecommandationsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/veille': typeof AuthenticatedVeilleRoute
+  '/legal/cgu': typeof LegalCguRoute
+  '/legal/confidentialite': typeof LegalConfidentialiteRoute
   '/analyse/$id': typeof AuthenticatedAnalyseIdRoute
   '/patrimoine/$id': typeof AuthenticatedPatrimoineIdRoute
   '/patrimoine/nouveau': typeof AuthenticatedPatrimoineNouveauRoute
@@ -153,16 +160,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/cgu': typeof CguRoute
-  '/confidentialite': typeof ConfidentialiteRoute
   '/analyser': typeof AuthenticatedAnalyserRoute
   '/assistant': typeof AuthenticatedAssistantRoute
+  '/compte': typeof AuthenticatedCompteRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/historique': typeof AuthenticatedHistoriqueRoute
   '/radar': typeof AuthenticatedRadarRoute
   '/recommandations': typeof AuthenticatedRecommandationsRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/veille': typeof AuthenticatedVeilleRoute
+  '/legal/cgu': typeof LegalCguRoute
+  '/legal/confidentialite': typeof LegalConfidentialiteRoute
   '/analyse/$id': typeof AuthenticatedAnalyseIdRoute
   '/patrimoine/$id': typeof AuthenticatedPatrimoineIdRoute
   '/patrimoine/nouveau': typeof AuthenticatedPatrimoineNouveauRoute
@@ -175,16 +183,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/cgu': typeof CguRoute
-  '/confidentialite': typeof ConfidentialiteRoute
   '/_authenticated/analyser': typeof AuthenticatedAnalyserRoute
   '/_authenticated/assistant': typeof AuthenticatedAssistantRoute
+  '/_authenticated/compte': typeof AuthenticatedCompteRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/historique': typeof AuthenticatedHistoriqueRoute
   '/_authenticated/radar': typeof AuthenticatedRadarRoute
   '/_authenticated/recommandations': typeof AuthenticatedRecommandationsRoute
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/_authenticated/veille': typeof AuthenticatedVeilleRoute
+  '/legal/cgu': typeof LegalCguRoute
+  '/legal/confidentialite': typeof LegalConfidentialiteRoute
   '/_authenticated/analyse/$id': typeof AuthenticatedAnalyseIdRoute
   '/_authenticated/patrimoine/$id': typeof AuthenticatedPatrimoineIdRoute
   '/_authenticated/patrimoine/nouveau': typeof AuthenticatedPatrimoineNouveauRoute
@@ -197,16 +206,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/cgu'
-    | '/confidentialite'
     | '/analyser'
     | '/assistant'
+    | '/compte'
     | '/dashboard'
     | '/historique'
     | '/radar'
     | '/recommandations'
     | '/upgrade'
     | '/veille'
+    | '/legal/cgu'
+    | '/legal/confidentialite'
     | '/analyse/$id'
     | '/patrimoine/$id'
     | '/patrimoine/nouveau'
@@ -217,16 +227,17 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/cgu'
-    | '/confidentialite'
     | '/analyser'
     | '/assistant'
+    | '/compte'
     | '/dashboard'
     | '/historique'
     | '/radar'
     | '/recommandations'
     | '/upgrade'
     | '/veille'
+    | '/legal/cgu'
+    | '/legal/confidentialite'
     | '/analyse/$id'
     | '/patrimoine/$id'
     | '/patrimoine/nouveau'
@@ -238,16 +249,17 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/cgu'
-    | '/confidentialite'
     | '/_authenticated/analyser'
     | '/_authenticated/assistant'
+    | '/_authenticated/compte'
     | '/_authenticated/dashboard'
     | '/_authenticated/historique'
     | '/_authenticated/radar'
     | '/_authenticated/recommandations'
     | '/_authenticated/upgrade'
     | '/_authenticated/veille'
+    | '/legal/cgu'
+    | '/legal/confidentialite'
     | '/_authenticated/analyse/$id'
     | '/_authenticated/patrimoine/$id'
     | '/_authenticated/patrimoine/nouveau'
@@ -260,28 +272,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  CguRoute: typeof CguRoute
-  ConfidentialiteRoute: typeof ConfidentialiteRoute
+  LegalCguRoute: typeof LegalCguRoute
+  LegalConfidentialiteRoute: typeof LegalConfidentialiteRoute
   ApiPublicHooksRefreshMarketDataRoute: typeof ApiPublicHooksRefreshMarketDataRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/confidentialite': {
-      id: '/confidentialite'
-      path: '/confidentialite'
-      fullPath: '/confidentialite'
-      preLoaderRoute: typeof ConfidentialiteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cgu': {
-      id: '/cgu'
-      path: '/cgu'
-      fullPath: '/cgu'
-      preLoaderRoute: typeof CguRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -301,6 +299,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/confidentialite': {
+      id: '/legal/confidentialite'
+      path: '/legal/confidentialite'
+      fullPath: '/legal/confidentialite'
+      preLoaderRoute: typeof LegalConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/cgu': {
+      id: '/legal/cgu'
+      path: '/legal/cgu'
+      fullPath: '/legal/cgu'
+      preLoaderRoute: typeof LegalCguRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/veille': {
@@ -343,6 +355,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/compte': {
+      id: '/_authenticated/compte'
+      path: '/compte'
+      fullPath: '/compte'
+      preLoaderRoute: typeof AuthenticatedCompteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/assistant': {
@@ -407,6 +426,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyserRoute: typeof AuthenticatedAnalyserRoute
   AuthenticatedAssistantRoute: typeof AuthenticatedAssistantRoute
+  AuthenticatedCompteRoute: typeof AuthenticatedCompteRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHistoriqueRoute: typeof AuthenticatedHistoriqueRoute
   AuthenticatedRadarRoute: typeof AuthenticatedRadarRoute
@@ -422,6 +442,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyserRoute: AuthenticatedAnalyserRoute,
   AuthenticatedAssistantRoute: AuthenticatedAssistantRoute,
+  AuthenticatedCompteRoute: AuthenticatedCompteRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHistoriqueRoute: AuthenticatedHistoriqueRoute,
   AuthenticatedRadarRoute: AuthenticatedRadarRoute,
@@ -441,8 +462,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  CguRoute: CguRoute,
-  ConfidentialiteRoute: ConfidentialiteRoute,
+  LegalCguRoute: LegalCguRoute,
+  LegalConfidentialiteRoute: LegalConfidentialiteRoute,
   ApiPublicHooksRefreshMarketDataRoute: ApiPublicHooksRefreshMarketDataRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }

@@ -194,12 +194,35 @@ function buildEconomics(d: PropertyInputT) {
 // --------------------------------------------------------------------------
 // createProperty
 // --------------------------------------------------------------------------
+const FREE_PROPERTY_LIMIT = 1;
+
 export const createProperty = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => PropertyInput.parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // Gating multi-biens : le plan Free est limité à 1 bien.
+    const { data: planRow } = await supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", userId)
+      .single();
+    const plan = (planRow?.plan ?? "free") as string;
+    if (plan === "free") {
+      const { count } = await supabase
+        .from("properties")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId);
+      if ((count ?? 0) >= FREE_PROPERTY_LIMIT) {
+        throw new Error(
+          "Le plan Free est limité à 1 bien dans le patrimoine. Passez à Pro ou Business pour ajouter plusieurs biens.",
+        );
+      }
+    }
+
     const eco = buildEconomics(data);
+
 
     const { data: inserted, error } = await supabase
       .from("properties")

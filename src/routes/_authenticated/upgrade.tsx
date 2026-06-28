@@ -30,28 +30,34 @@ const PLANS = [
     key: "free",
     name: "Free",
     quota: "3 analyses / mois",
-    features: ["Comparatif 6 stratégies", "Bandeau réglementaire", "Export PDF"],
+    features: [
+      "Comparatif 6 stratégies",
+      "Bandeau réglementaire local",
+      "Export PDF de l'analyse",
+      "1 bien suivi dans le patrimoine",
+    ],
     monthly: { price: 0, priceId: null as string | null },
     yearly: { price: 0, priceId: null as string | null },
   },
   {
     key: "pro",
     name: "Pro",
-    quota: "50 analyses / mois",
-    features: ["Tout Free", "Historique illimité", "Encart flip activable", "Support prioritaire"],
+    quota: "Analyses illimitées",
+    features: [
+      "Tout RentIQ débloqué",
+      "Patrimoine multi-biens illimité",
+      "Historique d'analyses complet",
+      "Veille & radar Firecrawl en continu",
+      "Assistant IA prioritaire",
+      "Support email prioritaire",
+    ],
     monthly: { price: 9, priceId: "pro_monthly" },
-    yearly: { price: 7.2, priceId: "pro_yearly" }, // 86,40 €/an
+    yearly: { price: 7.2, priceId: "pro_yearly" },
     highlight: true,
   },
-  {
-    key: "business",
-    name: "Business",
-    quota: "Analyses illimitées",
-    features: ["Tout Pro", "Multi-biens & portefeuille", "API d'export", "Accompagnement onboarding"],
-    monthly: { price: 30, priceId: "business_monthly" },
-    yearly: { price: 24, priceId: "business_yearly" }, // 288 €/an
-  },
 ];
+
+
 
 function UpgradePage() {
   const fetchQuota = useServerFn(getQuota);
@@ -79,7 +85,7 @@ function UpgradePage() {
     }
   }, []);
 
-  const currentPlan = (isActive ? (subscription?.product_id === "pro_plan" ? "pro" : subscription?.product_id === "business_plan" ? "business" : "free") : "free");
+  const currentPlan = isActive ? "pro" : "free";
 
   const handleCheckout = async (priceId: string, planName: string) => {
     if (!userId) {
@@ -129,7 +135,7 @@ function UpgradePage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
         {PLANS.map((p) => {
           const isCurrent = p.key === currentPlan;
           const priceInfo = p[cycle];

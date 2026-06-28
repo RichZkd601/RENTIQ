@@ -2,8 +2,16 @@ import { Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut } from "lucide-react";
+import { LogOut, UserCircle2 } from "lucide-react";
 import logoUrl from "@/assets/rentiq-logo.png";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const router = useRouter();
@@ -66,9 +74,31 @@ export function Header() {
               <Button asChild className="hidden h-10 rounded-xl px-5 text-[15px] font-semibold shadow-card sm:inline-flex">
                 <Link to="/analyser">Évaluer une opportunité</Link>
               </Button>
-              <Button size="sm" variant="ghost" onClick={signOut}>
-                <LogOut className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost" aria-label="Mon compte">
+                    <UserCircle2 className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {email && (
+                    <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">
+                      {email}
+                    </DropdownMenuLabel>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/compte">Mon compte & abonnement</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/upgrade">Plans & tarifs</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" /> Se déconnecter
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,13 @@ import { toast } from "sonner";
 import { Sparkles } from "lucide-react";
 import { track } from "@/lib/analytics";
 
+const searchSchema = z.object({
+  invite: z.string().trim().min(1).max(64).optional(),
+  mode: z.enum(["signin", "signup"]).optional(),
+});
+
 export const Route = createFileRoute("/auth")({
+  validateSearch: searchSchema,
   head: () => ({
     meta: [
       { title: "Connexion — RentIQ" },
@@ -32,14 +38,30 @@ const emailOnlySchema = z.object({
 });
 
 type Mode = "signin" | "signup" | "forgot";
+const INVITE_STORAGE_KEY = "rentiq_invite_code";
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>("signin");
+  const search = useSearch({ from: "/auth" });
+  const [mode, setMode] = useState<Mode>(search.mode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [inviteCode, setInviteCode] = useState(search.invite ?? "");
   const [loading, setLoading] = useState(false);
+
+  // Si on arrive avec ?invite=XYZ → on bascule sur l'inscription et on mémorise le code
+  useEffect(() => {
+    if (search.invite) {
+      setInviteCode(search.invite);
+      setMode("signup");
+      try {
+        localStorage.setItem(INVITE_STORAGE_KEY, search.invite);
+      } catch {
+        /* noop */
+      }
+    }
+  }, [search.invite]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -73,17 +95,26 @@ function AuthPage() {
       }
 
       if (mode === "signup") {
+        const code = inviteCode.trim();
+        if (!code) {
+          toast.error("Un code d'invitation est requis pour rejoindre la bêta.");
+          return;
+        }
         const { data, error } = await supabase.auth.signUp({
           email: parsed.data.email,
           password: parsed.data.password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName.trim() },
+            data: { full_name: fullName.trim(), invitation_code: code },
           },
         });
         if (error) throw error;
         track("signup", { has_session: !!data.session });
-        // Si la confirmation d'email est activée, pas de session immédiate.
+        try {
+          localStorage.removeItem(INVITE_STORAGE_KEY);
+        } catch {
+          /* noop */
+        }
         if (!data.session) {
           toast.success("Compte créé. Vérifie ta boîte mail pour confirmer ton adresse avant de te connecter.");
           setMode("signin");
@@ -102,14 +133,16 @@ function AuthPage() {
         navigate({ to: "/historique" });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erreur d'authentification";
-      const friendly = msg.includes("Invalid login")
-        ? "Email ou mot de passe incorrect"
-        : msg.includes("Email not confirmed")
-          ? "Email non confirmé. Vérifie ta boîte de réception."
-          : msg.includes("User already registered")
-            ? "Un compte existe déjà avec cet email. Essaie de te connecter."
-            : msg;
+      const raw = err instanceof Error ? err.message : "Erreur d'authentification";
+      const friendly = raw.includes("INVITATION_REQUIRED")
+        ? "Code d'invitation invalide, expiré ou déjà utilisé."
+        : raw.includes("Invalid login")
+          ? "Email ou mot de passe incorrect"
+          : raw.includes("Email not confirmed")
+            ? "Email non confirmé. Vérifie ta boîte de réception."
+            : raw.includes("User already registered")
+              ? "Un compte existe déjà avec cet email. Essaie de te connecter."
+              : raw;
       toast.error(friendly);
     } finally {
       setLoading(false);
@@ -117,6 +150,11 @@ function AuthPage() {
   };
 
   const handleGoogle = async () => {
+    // Bêta privée : Google uniquement pour les comptes existants.
+    if (mode === "signup") {
+      toast.error("Pour créer un compte, utilise ton code d'invitation + email. Google sera disponible pour la connexion ensuite.");
+      return;
+    }
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
@@ -125,7 +163,6 @@ function AuthPage() {
       if ("error" in result && result.error) {
         throw result.error;
       }
-      // En cas de redirect le navigateur quitte la page ; sinon, session déjà posée.
       if (!("redirected" in result && result.redirected)) {
         navigate({ to: "/historique" });
       }
@@ -197,6 +234,21 @@ function AuthPage() {
               </TabsList>
               <form onSubmit={handleSubmit} className="mt-6 space-y-4">
                 <TabsContent value="signup" className="m-0 space-y-4">
+                  <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+                    🔒 Bêta privée : un code d'invitation est nécessaire pour créer un compte.
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="inviteCode">Code d'invitation</Label>
+                    <Input
+                      id="inviteCode"
+                      value={inviteCode}
+                      onChange={(e) => setInviteCode(e.target.value)}
+                      placeholder="RENTIQ-XXXX"
+                      maxLength={64}
+                      required
+                      autoComplete="off"
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Nom complet</Label>
                     <Input

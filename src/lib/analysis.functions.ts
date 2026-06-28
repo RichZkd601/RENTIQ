@@ -50,7 +50,7 @@ const AnalysisInput = z.object({
 
 export type AnalysisInputT = z.infer<typeof AnalysisInput>;
 
-const PLAN_QUOTAS: Record<string, number> = { free: 3, pro: 50, business: 9999, premium: 9999, lifetime: 999999 };
+const PLAN_QUOTAS: Record<string, number> = { free: 3, pro: 999999, business: 999999, premium: 999999, lifetime: 999999 };
 
 // ---------------- generateAnalysis ----------------
 export const generateAnalysis = createServerFn({ method: "POST" })

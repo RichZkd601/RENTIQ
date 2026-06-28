@@ -2,8 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const PLAN_BY_PRODUCT: Record<string, string> = {
   pro_plan: "pro",
-  business_plan: "business",
+  // business_plan supprimé — un seul abonnement payant : Pro.
+  business_plan: "pro",
 };
+
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
