@@ -114,7 +114,7 @@ function ComptePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 px-4 py-10">
       <header className="space-y-1">
-        <h1 className="text-3xl font-semibold tracking-tight">Mon compte</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-[36px]">Mon <span className="text-gradient">compte</span></h1>
         <p className="text-sm text-muted-foreground">
           Vos informations, votre abonnement et la suppression de votre espace.
         </p>

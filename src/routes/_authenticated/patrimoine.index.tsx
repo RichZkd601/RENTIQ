@@ -38,12 +38,13 @@ function PatrimoinePage() {
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Mon portefeuille immobilier</h1>
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Patrimoine</div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">Mon portefeuille <span className="text-gradient">immobilier</span></h1>
           <p className="text-sm text-muted-foreground">
             Vue consolidée de vos actifs, de votre dette et de votre cashflow.
           </p>
         </div>
-        <Button asChild>
+        <Button variant="gradient" asChild>
           <Link to="/patrimoine/nouveau">
             <Plus className="mr-1 h-4 w-4" />
             Ajouter un actif
@@ -56,19 +57,20 @@ function PatrimoinePage() {
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>
       ) : !list.data || list.data.length === 0 ? (
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Votre portefeuille est encore vierge
-            </CardTitle>
+        <Card className="bg-aurora noise relative overflow-hidden border-dashed">
+          <div className="bg-grid pointer-events-none absolute inset-0 -z-[1]" aria-hidden />
+          <CardHeader className="relative z-[2]">
+            <div className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-brand-gradient text-white shadow-glow animate-pulse-glow">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <CardTitle className="text-xl">Votre portefeuille est encore vierge</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>
+          <CardContent className="relative z-[2] space-y-4 text-sm text-muted-foreground">
+            <p className="max-w-lg">
               Ajoutez un actif détenu ou évaluez une nouvelle opportunité pour activer le cockpit
               patrimonial, les arbitrages recommandés et le copilote IA.
             </p>
-            <Button asChild>
+            <Button variant="gradient" asChild>
               <Link to="/patrimoine/nouveau">
                 <Plus className="mr-1 h-4 w-4" />
                 Ajouter mon premier actif

@@ -87,9 +87,11 @@ function AssistantPage() {
   return (
     <div className="mx-auto flex h-[calc(100svh-3.5rem-1px)] max-w-3xl flex-col px-4 py-6">
       <div className="mb-4">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-          <Sparkles className="h-6 w-6 text-primary" />
-          Copilote patrimonial
+        <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight sm:text-[28px]">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-white shadow-glow animate-pulse-glow">
+            <Sparkles className="h-5 w-5" />
+          </span>
+          Copilote <span className="text-gradient">patrimonial</span>
         </h1>
         <p className="text-sm text-muted-foreground">
           Un copilote entraîné sur votre patrimoine, vos opportunités et le marché.

@@ -160,9 +160,10 @@ function PropertyDetailPage() {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="hsl(160 84% 39%)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
+                    stroke="var(--color-primary)"
+                    strokeWidth={2.5}
+                    dot={{ r: 3, fill: "var(--color-primary)" }}
+                    activeDot={{ r: 5 }}
                   />
                 </LineChart>
               </ResponsiveContainer>

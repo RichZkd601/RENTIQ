@@ -80,9 +80,11 @@ function RadarPage() {
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
-            <Radar className="h-6 w-6" />
-            Radar de marché
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold tracking-tight sm:text-[28px]">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-gradient text-white shadow-glow">
+              <Radar className="h-5 w-5" />
+            </span>
+            Radar de <span className="text-gradient">marché</span>
           </h1>
           <p className="text-sm text-muted-foreground">
             Détectez en avance les opportunités qui correspondent à votre thèse d'investissement.
@@ -114,9 +116,16 @@ function RadarPage() {
       {profiles.isLoading ? (
         <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
       ) : (profiles.data?.length ?? 0) === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-6 text-sm text-muted-foreground">
-            Aucun profil. Créez votre premier radar (ville, budget, stratégie, cashflow minimum).
+        <Card className="bg-aurora noise relative overflow-hidden border-dashed">
+          <div className="bg-grid pointer-events-none absolute inset-0 -z-[1]" aria-hidden />
+          <CardContent className="relative z-[2] flex flex-col items-start gap-3 py-8">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-gradient text-white shadow-glow animate-pulse-glow">
+              <Radar className="h-6 w-6" />
+            </div>
+            <p className="max-w-lg text-sm text-muted-foreground">
+              Aucune thèse pour l'instant. Créez votre premier radar (ville, budget, stratégie,
+              cashflow minimum) et laissez RentIQ détecter les opportunités qui vous correspondent.
+            </p>
           </CardContent>
         </Card>
       ) : (

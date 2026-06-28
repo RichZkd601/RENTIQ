@@ -107,7 +107,7 @@ function UpgradePage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">Choisissez votre plan</h1>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-[36px]">Choisissez votre <span className="text-gradient">plan</span></h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Fiscalité 2026, comparatif 6 stratégies, conformité réglementaire locale.
         </p>

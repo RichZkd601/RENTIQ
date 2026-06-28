@@ -54,7 +54,8 @@ function HistoriquePage() {
     <div className="mx-auto max-w-5xl px-4 py-10 space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Journal de décisions</h1>
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">Historique</div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">Journal de <span className="text-gradient">décisions</span></h1>
           <p className="text-sm text-muted-foreground">Retrouvez chaque opportunité évaluée et la décision que vous avez prise.</p>
         </div>
         <div className="flex items-center gap-3">

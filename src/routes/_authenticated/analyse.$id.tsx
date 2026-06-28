@@ -96,10 +96,10 @@ function AnalysePage() {
 
   const decisionStyles = verdict
     ? verdict.decision === "acheter"
-      ? { ring: "ring-emerald-500/40", bg: "bg-emerald-50 dark:bg-emerald-950/20", text: "text-emerald-700 dark:text-emerald-300", border: "border-emerald-300" }
+      ? { ring: "ring-success/40", bg: "bg-success-soft", text: "text-success", border: "border-success/50" }
       : verdict.decision === "negocier"
-        ? { ring: "ring-amber-500/40", bg: "bg-amber-50 dark:bg-amber-950/20", text: "text-amber-700 dark:text-amber-300", border: "border-amber-300" }
-        : { ring: "ring-rose-500/40", bg: "bg-rose-50 dark:bg-rose-950/20", text: "text-rose-700 dark:text-rose-300", border: "border-rose-300" }
+        ? { ring: "ring-warning/40", bg: "bg-warning-soft", text: "text-warning", border: "border-warning/50" }
+        : { ring: "ring-danger/40", bg: "bg-danger-soft", text: "text-danger", border: "border-danger/50" }
     : null;
 
   return (
@@ -251,7 +251,7 @@ function AnalysePage() {
                         <span className="text-lg">{h.icon}</span>
                         <p className="font-medium">{h.label}</p>
                         {isBetter && (
-                          <Badge variant="default" className="bg-emerald-600 hover:bg-emerald-600">
+                          <Badge variant="default" className="bg-success text-success-foreground hover:bg-success">
                             +{delta} €/mois vs actuel
                           </Badge>
                         )}
@@ -296,7 +296,7 @@ function AnalysePage() {
             {winner && ai?.winnerStrategy !== "aucune" && (
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Cashflow / mois</p>
-                <p className={`text-3xl font-bold ${winner.monthlyNetCashflow >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                <p className={`tabular text-3xl font-bold ${winner.monthlyNetCashflow >= 0 ? "text-success" : "text-danger"}`}>
                   {winner.monthlyNetCashflow >= 0 ? "+" : ""}{winner.monthlyNetCashflow} €
                 </p>
                 <p className="text-xs text-muted-foreground">Rendement net {winner.netYieldPct}%</p>
@@ -454,7 +454,7 @@ function BulletCard({ title, icon, items }: { title: string; icon: React.ReactNo
 }
 
 function Row({ k, v, accent }: { k: string; v: string; accent?: "pos" | "neg" }) {
-  const color = accent === "pos" ? "text-emerald-600" : accent === "neg" ? "text-rose-600" : "";
+  const color = accent === "pos" ? "text-success" : accent === "neg" ? "text-danger" : "";
   return (
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground">{k}</span>

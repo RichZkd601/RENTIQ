@@ -66,8 +66,13 @@ function DashboardPage() {
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Cockpit patrimonial</h1>
-          <p className="text-sm text-muted-foreground">
+          <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+            Cockpit
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">
+            Pilotez votre <span className="text-gradient">patrimoine</span>.
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Votre patrimoine en un coup d'œil. Vos prochaines décisions, priorisées.
           </p>
         </div>
@@ -78,7 +83,7 @@ function DashboardPage() {
               Évaluer une opportunité
             </Link>
           </Button>
-          <Button asChild>
+          <Button variant="gradient" asChild>
             <Link to="/patrimoine/nouveau">
               <Plus className="mr-1 h-4 w-4" />
               Ajouter un actif
@@ -88,19 +93,20 @@ function DashboardPage() {
       </div>
 
       {empty ? (
-        <Card className="border-dashed">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Construisez votre portefeuille
-            </CardTitle>
-            <CardDescription>
+        <Card className="bg-aurora noise relative overflow-hidden border-dashed">
+          <div className="bg-grid pointer-events-none absolute inset-0 -z-[1]" aria-hidden />
+          <CardHeader className="relative z-[2]">
+            <div className="mb-2 grid h-12 w-12 place-items-center rounded-2xl bg-brand-gradient text-white shadow-glow animate-pulse-glow">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <CardTitle className="text-xl">Construisez votre portefeuille</CardTitle>
+            <CardDescription className="max-w-lg">
               Ajoutez vos premiers actifs pour activer le cockpit : valeur patrimoniale, cashflow net,
               arbitrages recommandés et copilote IA.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button asChild>
+          <CardContent className="relative z-[2] flex flex-wrap gap-2">
+            <Button variant="gradient" asChild>
               <Link to="/patrimoine/nouveau">
                 <Plus className="mr-1 h-4 w-4" />
                 Ajouter mon premier actif
@@ -157,8 +163,8 @@ function DashboardPage() {
                   <AreaChart data={ov.data!.timeline}>
                     <defs>
                       <linearGradient id="nw" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(160 84% 39%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(160 84% 39%)" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="var(--color-brand-3)" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <XAxis
@@ -181,9 +187,9 @@ function DashboardPage() {
                     <Area
                       type="monotone"
                       dataKey="netWorth"
-                      stroke="hsl(160 84% 39%)"
+                      stroke="var(--color-primary)"
                       fill="url(#nw)"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -233,7 +239,7 @@ function DashboardPage() {
             <li key={r.id} className="flex items-start justify-between gap-2 text-sm">
               <span className="min-w-0 truncate">{r.title}</span>
               {Number(r.estimated_monthly_gain) > 0 && (
-                <span className="shrink-0 font-mono text-emerald-600">
+                <span className="shrink-0 font-mono font-semibold text-success">
                   +{Math.round(Number(r.estimated_monthly_gain))} €/m
                 </span>
               )}
@@ -292,15 +298,18 @@ function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="bg-primary/5">
-          <CardHeader className="pb-2">
+        <Card className="relative overflow-hidden border-primary/20 bg-brand-soft/50">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-brand-gradient opacity-20 blur-3xl" aria-hidden />
+          <CardHeader className="relative z-[1] pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Sparkles className="h-4 w-4" />
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-gradient text-white shadow-glow">
+                <Sparkles className="h-4 w-4" />
+              </span>
               Copilote patrimonial IA
             </CardTitle>
             <CardDescription>Un copilote entraîné sur votre patrimoine, vos opportunités et le marché.</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
+          <CardContent className="relative z-[1] space-y-2">
             <div className="flex flex-wrap gap-2 text-xs">
               {[
                 "Puis-je financer un actif supplémentaire ?",
@@ -309,13 +318,13 @@ function DashboardPage() {
               ].map((q) => (
                 <span
                   key={q}
-                  className="rounded-full border bg-background px-3 py-1 text-muted-foreground"
+                  className="rounded-full border bg-background/70 px-3 py-1 text-muted-foreground backdrop-blur transition-colors hover:border-primary/40 hover:text-foreground"
                 >
                   {q}
                 </span>
               ))}
             </div>
-            <Button size="sm" asChild className="mt-2">
+            <Button size="sm" variant="gradient" asChild className="mt-2">
               <Link to="/assistant">
                 Consulter mon copilote
                 <ArrowRight className="ml-1 h-3 w-3" />
@@ -342,14 +351,20 @@ function Kpi({
   tone?: "pos" | "neg";
 }) {
   return (
-    <Card>
-      <CardContent className="space-y-1 py-4">
+    <Card className="hover-lift spotlight" onMouseMove={(e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+    }}>
+      <CardContent className="relative z-[1] space-y-1 py-4">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {icon}
+          <span className="grid h-6 w-6 place-items-center rounded-lg bg-brand-soft text-primary">
+            {icon}
+          </span>
           {label}
         </div>
         <p
-          className={`font-mono text-xl font-semibold ${tone === "pos" ? "text-emerald-600" : tone === "neg" ? "text-rose-600" : ""}`}
+          className={`tabular font-mono text-xl font-semibold ${tone === "pos" ? "text-success" : tone === "neg" ? "text-danger" : ""}`}
         >
           {value}
         </p>
@@ -373,13 +388,13 @@ function MiniProperty({
   cashflow: number;
 }) {
   return (
-    <Card className={tone === "pos" ? "border-emerald-300/50" : "border-amber-300/50"}>
+    <Card className={tone === "pos" ? "border-success/40" : "border-warning/40"}>
       <CardContent className="py-4">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {tone === "pos" ? (
-            <ArrowUpRight className="h-3.5 w-3.5 text-emerald-600" />
+            <ArrowUpRight className="h-3.5 w-3.5 text-success" />
           ) : (
-            <ArrowDownRight className="h-3.5 w-3.5 text-amber-600" />
+            <ArrowDownRight className="h-3.5 w-3.5 text-warning" />
           )}
           {title}
         </div>

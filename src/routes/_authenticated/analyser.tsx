@@ -419,11 +419,14 @@ function AnalyserPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Nouvelle opportunité</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-[28px]">Nouvelle <span className="text-gradient">opportunité</span></h1>
         <p className="text-sm text-muted-foreground">Étape {step}/3 — {step === 1 ? "Le bien" : step === 2 ? "Votre financement" : "Stratégies à comparer"}</p>
-        <div className="mt-3 flex gap-1">
+        <div className="mt-3 flex gap-1.5">
           {[1, 2, 3].map((s) => (
-            <div key={s} className={`h-1 flex-1 rounded-full ${s <= step ? "bg-primary" : "bg-muted"}`} />
+            <div
+              key={s}
+              className={`h-1.5 flex-1 rounded-full transition-all duration-500 [transition-timing-function:var(--ease-spring)] ${s <= step ? "bg-brand-gradient shadow-glow" : "bg-muted"}`}
+            />
           ))}
         </div>
       </div>
